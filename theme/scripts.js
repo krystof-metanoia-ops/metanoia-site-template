@@ -120,8 +120,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const secs = [...document.querySelectorAll("main > section")];
   // Resting spot per section, as fractions of the viewport (x, y), plus scale and opacity.
   // Alternates right/left so the orb weaves down the page; the last stop is the contact section.
+  const contactIdx = secs.findIndex((s) => s.id === "contact");
   const spot = (i, el) => {
-    if (el.id === "contact") return { x: 0.5, y: 0.42, s: 2.2, o: 0.12 };
+    // the contact section and everything after it share one resting spot, so the orb settles there
+    if (el.id === "contact" || (contactIdx > -1 && i > contactIdx)) return { x: 0.5, y: 0.5, s: 2.4, o: 0.1 };
     if (i === 0) return { x: 0.9, y: 0.22, s: 1, o: 1 };
     return i % 2 ? { x: 0.06, y: 0.55, s: 0.55 + (i % 3) * 0.15, o: 0.9 } : { x: 0.95, y: 0.4, s: 0.7 + (i % 2) * 0.2, o: 0.9 };
   };

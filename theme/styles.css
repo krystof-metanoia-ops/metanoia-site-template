@@ -572,3 +572,6 @@ html:has(body[data-signature]){overflow-x:clip}
   .orb{display:none}
   [data-signature].js .sec h2{transition:none;font-weight:300}
 }
+/* the orb paints behind all page content (negative z-index in the root stacking context) */
+.orb{z-index:-1}
+[data-signature] main>section{z-index:auto}
