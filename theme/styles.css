@@ -535,3 +535,40 @@ h2{font-size:clamp(1.6rem,2.6vw,2.2rem);text-align:center;margin-bottom:2rem}
 .skin-airy h2 em{text-transform:none}
 .field--check input{width:auto;flex:none}
 .contact-plain .field--check{justify-content:flex-start}
+
+/* =====================================================================================
+   Signature moments (opt-in theme.signature → <body data-signature>; 2026-10-29). Three, on purpose:
+   1. the hero photo opens out of a pink circle on load;
+   2. one pink orb travels down the page with the scroll, linking the sections, and comes to rest
+      behind the Fund II materials form (replaces the per-section circles, which were clipped at
+      section edges and made the page read as separate blocks);
+   3. section headings move from hairline to light weight as they enter.
+   transform/opacity/clip-path/font-weight only; all static under prefers-reduced-motion.
+   ===================================================================================== */
+html:has(body[data-signature]){overflow-x:clip}
+[data-signature] .sec{overflow:visible}
+[data-signature] .sec::before,[data-signature] .decor{display:none}
+[data-signature] main>section{position:relative;z-index:1}
+[data-signature] .tone--white,[data-signature] .tone--light{background:transparent}
+[data-signature] .strip.tone--white{background:transparent}
+.orb{position:fixed;left:0;top:0;width:340px;height:340px;margin:-170px 0 0 -170px;border-radius:50%;z-index:0;pointer-events:none;
+  background:radial-gradient(circle at 35% 35%,color-mix(in srgb,var(--accent) 85%,#fff) 0%,var(--accent) 60%,color-mix(in srgb,var(--accent) 80%,#000) 100%);
+  will-change:transform,opacity;transform:translate3d(-400px,-400px,0)}
+/* text stays readable where the orb passes: content sits above it, and cards keep their own background */
+[data-signature] .sec .wrap{position:relative;z-index:1}
+/* 1. hero reveal */
+[data-signature] .hero-split__media{position:relative}
+[data-signature] .hero-split__media::before{content:"";position:absolute;left:50%;top:45%;width:min(36vw,420px);aspect-ratio:1;border-radius:50%;background:var(--accent);transform:translate(-50%,-50%) scale(1);transition:transform 1.4s cubic-bezier(.2,.7,.1,1),opacity 1.4s;z-index:0}
+[data-signature] .hero-split__media img{position:relative;z-index:1;clip-path:circle(0% at 50% 45%);transition:clip-path 1.6s cubic-bezier(.65,0,.25,1) .25s}
+[data-signature].is-loaded .hero-split__media img{clip-path:circle(75% at 50% 45%)}
+[data-signature].is-loaded .hero-split__media::before{transform:translate(-50%,-50%) scale(.2);opacity:0}
+/* 3. heading weight */
+[data-signature].js .sec h2,[data-signature].js .textsec h2{font-weight:100;letter-spacing:-.045em;transition:font-weight 1.4s cubic-bezier(.2,.7,.2,1),letter-spacing 1.4s cubic-bezier(.2,.7,.2,1)}
+[data-signature].js .is-in h2{font-weight:300;letter-spacing:-.035em}
+@media (max-width:820px){.orb{width:200px;height:200px;margin:-100px 0 0 -100px}}
+@media (prefers-reduced-motion:reduce){
+  [data-signature] .hero-split__media img{clip-path:none;transition:none}
+  [data-signature] .hero-split__media::before{display:none}
+  .orb{display:none}
+  [data-signature].js .sec h2{transition:none;font-weight:300}
+}

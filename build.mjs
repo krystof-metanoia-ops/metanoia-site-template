@@ -351,7 +351,7 @@ ${font}
 <link rel="stylesheet" href="/theme/styles.css">
 <script src="/theme/scripts.js" defer></script>
 </head>
-<body${T.skin ? ` class="${list(T.skin).map((k) => `skin-${esc(k)}`).join(" ")}"` : ""}${T.motion ? " data-motion" : ""}>
+<body${T.skin ? ` class="${list(T.skin).map((k) => `skin-${esc(k)}`).join(" ")}"` : ""}${T.motion ? " data-motion" : ""}${T.signature ? " data-signature" : ""}>
 <header class="topbar">
   <div class="wrap topbar__inner">
     <a class="logo" href="/#top"><img src="/${esc(S.logo)}" alt="${esc(S.title)}"></a>
