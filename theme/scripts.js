@@ -125,7 +125,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // the contact section and everything after it share one resting spot, so the orb settles there
     if (el.id === "contact" || (contactIdx > -1 && i > contactIdx)) return { x: 0.5, y: 0.5, s: 2.4, o: 0.1 };
     if (i === 0) return { x: 0.9, y: 0.22, s: 1, o: 1 };
-    return i % 2 ? { x: 0.06, y: 0.55, s: 0.55 + (i % 3) * 0.15, o: 0.9 } : { x: 0.95, y: 0.4, s: 0.7 + (i % 2) * 0.2, o: 0.9 };
+    // between the hero and the form the orb is pale (0.3), so text that passes over it stays readable
+    return i % 2 ? { x: 0.06, y: 0.55, s: 0.55 + (i % 3) * 0.15, o: 0.3 } : { x: 0.95, y: 0.4, s: 0.7 + (i % 2) * 0.2, o: 0.3 };
   };
   const lerp = (a, b, t) => a + (b - a) * t;
   const ease = (t) => t * t * (3 - 2 * t);
