@@ -18,6 +18,14 @@ const here = dirname(fileURLToPath(import.meta.url));
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i > -1 ? process.argv[i + 1] : d; };
 const content = arg("--content", process.cwd());
 const out = arg("--out", join(content, "dist"));
+// --relative (2026-10-29, for previews opened straight from disk via file://): rewrite the root-absolute
+// asset and link paths to relative ones. Netlify builds never pass it, so deployed output is unchanged.
+const relative = process.argv.includes("--relative");
+const rel = (html, up = "") => !relative ? html : html
+  .replace(/(src|href|action)="\/(theme|images)\//g, `$1="${up}$2/`)
+  .replace(/href="\/#/g, `href="${up}index.html#`)
+  .replace(/href="\/"/g, `href="${up}index.html"`)
+  .replace(/action="\/thank-you\/"/g, `action="${up}thank-you/index.html"`);
 
 const site = JSON.parse(readFileSync(join(content, "site.json"), "utf8"));
 const S = site.site, T = site.theme ?? {};
@@ -28,9 +36,40 @@ const esc = (s = "") => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").r
 const rich = (s = "") => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
 const paras = (x) => (Array.isArray(x) ? x : x ? [x] : []).map((p) => `<p>${rich(p)}</p>`).join("");
 
+// ---- opt-in additions (2026-10-29, built to match Kidron's "HOME2" design; Krystof's call to extend
+// the template rather than hand-code one client page). RULE: every option below is opt-in. When a
+// site.json doesn't use it, the renderers must emit byte-identical HTML to before, so existing client
+// sites don't change on their next build. The regression check is: build an old site.json with the old
+// and the new template and diff the HTML (see README).
+//   ==word==  in a heading highlights it (<em>, accent-coloured), like HOME2's "Why <em>Kidron</em>".
+const head = (t = "") => rich(t).replace(/==(.+?)==/g, "<em>$1</em>");
+const title = (t = "") => esc(t).replace(/==(.+?)==/g, "<em>$1</em>");
+const list = (x) => (Array.isArray(x) ? x : x ? [x] : []);
+// tone: "dark" | "light" | "accent" — the alternating full-width backgrounds of the bold skin.
+const tone = (s) => (s.tone ? ` tone tone--${esc(s.tone)}` : "");
+// The heading block every new layout shares: small uppercase eyebrow, h2, optional intro line(s).
+const secHead = (s) => `
+    <div class="sec__head">
+      ${s.eyebrow ? `<p class="eyebrow">${esc(s.eyebrow)}</p>` : ""}
+      ${s.title ? `<h2>${title(s.title)}</h2>` : ""}
+      ${list(s.intro).map((p, i) => `<p class="sec__intro${i === 0 && list(s.intro).length > 1 ? " sec__intro--lead" : ""}">${rich(p)}</p>`).join("")}
+    </div>`;
+const outro = (s) => (s.outro ? `<p class="sec__outro">${rich(s.outro)}</p>` : "");
+const btns = (...bs) => bs.filter(Boolean).map((b, i) => `<a class="btn${i ? " btn--ghost" : ""}" href="${esc(b.href)}"${/^https?:/.test(b.href) ? ' target="_blank" rel="noopener"' : ""}>${esc(b.label)}</a>`).join("");
+
 // ---- sections. Each renderer takes one entry of site.json "sections" and returns HTML.
 const R = {
-  hero: (s) => `
+  hero: (s) => s.layout === "split" ? `
+<section class="hero-split${tone(s)}" id="${esc(s.id)}">
+  <div class="hero-split__text">
+    ${s.eyebrow ? `<p class="hero-split__eyebrow">${esc(s.eyebrow)}</p>` : ""}
+    <h1>${head(s.heading)}</h1>
+    ${paras(s.text)}
+    <div class="btn-row">${btns(s.cta, s.cta2)}</div>
+    ${s.tagline ? `<p class="hero-split__tagline">${esc(s.tagline)}</p>` : ""}
+  </div>
+  <div class="hero-split__media"><img src="${esc(s.image)}" alt="${esc(s.image_alt ?? "")}" fetchpriority="high"></div>
+</section>` : `
 <section class="hero" id="${esc(s.id)}">
   <img class="hero__bg" src="${esc(s.background)}" alt="${esc(s.background_alt ?? "")}" fetchpriority="high">
   <div class="wrap hero__inner">
@@ -44,7 +83,21 @@ const R = {
   <div class="wrap"><p class="statement__box">${rich(s.text)}</p></div>
 </section>`,
 
-  cards: (s) => `
+  // layout "tiles": HOME2's numbered approach cards (dark) and partner tiles (light); item "num" optional.
+  cards: (s) => s.layout === "tiles" ? `
+<section class="sec tiles${tone(s)}" id="${esc(s.id)}">
+  <div class="wrap">${secHead(s)}
+    <div class="tiles__grid tiles__grid--${Math.min(s.items.length, 4)}">
+      ${s.items.map((c) => `
+      <article class="tile">
+        ${c.num ? `<p class="tile__num">${esc(c.num)}</p>` : ""}
+        ${c.tag ? `<p class="eyebrow">${esc(c.tag)}</p>` : ""}
+        <h3>${head(c.title)}</h3>
+        ${paras(c.text)}
+      </article>`).join("")}
+    </div>${outro(s)}
+  </div>
+</section>` : `
 <section class="cards" id="${esc(s.id)}">
   <div class="wrap">
     <h2>${esc(s.title)}</h2>
@@ -59,7 +112,26 @@ const R = {
 </section>`,
 
   // People: a card per person; the full bio opens in a native <dialog> (no library).
-  people: (s) => `
+  // layout "cards": bios shown in full on the card (no dialog), photo in a ringed circle.
+  people: (s) => s.layout === "cards" ? `
+<section class="sec gp${tone(s)}" id="${esc(s.id)}">
+  <div class="wrap">${secHead(s)}
+    <div class="gp__grid">
+      ${s.items.map((p) => `
+      <article class="gp__card">
+        <div class="gp__top">
+          ${p.photo ? `<img class="gp__photo" src="${esc(p.photo)}" alt="${esc(p.name)}" loading="lazy">` : ""}
+          <div>
+            ${p.location ? `<p class="eyebrow">${esc(p.location)}</p>` : ""}
+            <h3>${esc(p.name)}</h3>
+            <p class="gp__role">${[p.credentials, p.role].filter(Boolean).map(esc).join(" · ")}</p>
+          </div>
+        </div>
+        <div class="gp__bio">${paras(p.bio)}</div>
+      </article>`).join("")}
+    </div>${outro(s)}
+  </div>
+</section>` : `
 <section class="people" id="${esc(s.id)}">
   <div class="wrap">
     <div class="people__panel">
@@ -87,7 +159,25 @@ const R = {
 </section>`,
 
   // Carousel: CSS scroll-snap does the sliding; scripts.js only adds the dots and buttons.
-  carousel: (s) => `
+  // layout "grid": HOME2's portfolio cards (category, name, headline, text, investors, "View ↗").
+  // filter: true adds category buttons above the grid (scripts.js does the filtering; without JS all show).
+  carousel: (s) => s.layout === "grid" ? `
+<section class="sec pgrid${tone(s)}" id="${esc(s.id)}">
+  <div class="wrap">${secHead(s)}
+    ${s.filter ? `<div class="pgrid__filter" role="group" aria-label="Filter by area"><button type="button" class="chip" aria-pressed="true" data-cat="">All</button>${[...new Set(s.items.map((c) => c.category).filter(Boolean))].map((c) => `<button type="button" class="chip" aria-pressed="false" data-cat="${esc(c)}">${esc(c)}</button>`).join("")}</div>` : ""}
+    <div class="pgrid__grid">
+      ${s.items.map((c) => `
+      <article class="pcard" data-cat="${esc(c.category ?? "")}">
+        ${c.category ? `<p class="eyebrow">${esc(c.category)}</p>` : ""}
+        ${c.logo ? `<img class="pcard__logo" src="${esc(c.logo)}" alt="${esc(c.logo_alt ?? c.name ?? "")}" loading="lazy">` : ""}
+        ${c.name ? `<h3>${esc(c.name)}</h3>` : ""}
+        ${c.area ? `<p class="pcard__title">${esc(c.area)}</p>` : ""}
+        <div class="pcard__body">${paras(c.text)}</div>
+        <div class="pcard__foot"><span>${esc(c.investors ?? "")}</span>${c.link ? `<a href="${esc(c.link)}" target="_blank" rel="noopener">${esc(c.link_label ?? "View ↗")}</a>` : ""}</div>
+      </article>`).join("")}
+    </div>${outro(s)}
+  </div>
+</section>` : `
 <section class="carousel" id="${esc(s.id)}">
   <div class="wrap">
     <h2>${esc(s.title)}</h2>
@@ -109,7 +199,15 @@ const R = {
   // Contact: a Netlify Forms form (data-netlify). Netlify finds it in the built HTML, stores
   // submissions and emails them to whoever is set under Forms → notifications. The honeypot field
   // replaces the WordPress spam plugin. "action" sends the visitor to the thank-you page.
-  contact: (s) => `
+  // layout "plain": no panel; heading, intro, buttons and email centred on the section's tone, form below.
+  contact: (s) => s.layout === "plain" ? `
+<section class="sec contact-plain${tone(s)}" id="${esc(s.id)}">
+  <div class="wrap">${secHead({ ...s, intro: undefined })}
+    ${s.intro ? `<p class="sec__intro">${rich(s.intro)}</p>` : ""}
+    ${s.email ? `<p class="contact-plain__email"><a href="mailto:${esc(s.email)}">${esc(s.email)}</a></p>` : ""}
+    ${form(s)}
+  </div>
+</section>` : `
 <section class="contact" id="${esc(s.id)}">
   <div class="wrap">
     <div class="contact__panel">
@@ -129,7 +227,72 @@ const R = {
     </div>
   </div>
 </section>`,
+
+  // ---- new section types (opt-in, 2026-10-29) ----
+  // strip: a band of short labelled items (HOME2's magenta "pillars strip").
+  strip: (s) => `
+<section class="strip${tone(s)}"${s.id ? ` id="${esc(s.id)}"` : ""}>
+  <div class="wrap strip__inner">
+    ${s.items.map((i) => `<div class="strip__item"><strong>${esc(i.title)}</strong>${i.text ? `<span>${esc(i.text)}</span>` : ""}</div>`).join("")}
+  </div>
+</section>`,
+
+  // text: two columns. Left: eyebrow, heading, paragraphs, region badges. Right: body paragraphs and a
+  // quote line, or bullets, or "aside" cards. Optional "stats" row underneath. Covers HOME2's
+  // "Why now", "Why Kidron" and "Fund I validation" sections with one shape.
+  text: (s) => `
+<section class="sec textsec${tone(s)}"${s.id ? ` id="${esc(s.id)}"` : ""}>
+  <div class="wrap">
+    ${s.eyebrow ? `<p class="eyebrow">${esc(s.eyebrow)}</p>` : ""}
+    <div class="textsec__grid">
+      <div class="textsec__main">
+        ${s.title ? `<h2>${title(s.title)}</h2>` : ""}
+        ${s.lead ? `<p class="textsec__lead">${rich(s.lead)}</p>` : ""}
+        ${paras(s.left)}
+        ${s.regions ? `<div class="regions">${s.regions.map((r) => `<div class="region"><strong>${esc(r.code)}</strong><span>${esc(r.label)}</span></div>`).join("")}</div>` : ""}
+      </div>
+      <div class="textsec__side">
+        ${paras(s.text)}
+        ${s.quote ? `<p class="textsec__quote">${rich(s.quote)}</p>` : ""}
+        ${s.bullets ? `<ul class="bullets">${s.bullets.map((b) => `<li>${rich(b)}</li>`).join("")}</ul>` : ""}
+        ${s.aside ? s.aside.map((c) => `<div class="aside-card">${c.tag ? `<p class="eyebrow">${esc(c.tag)}</p>` : ""}<h3>${head(c.title)}</h3>${paras(c.text)}</div>`).join("") : ""}
+      </div>
+    </div>
+    ${s.stats ? `<div class="stats">${s.stats.map((st) => `<div class="stat"><strong>${esc(st.value)}</strong><span>${esc(st.label)}</span></div>`).join("")}</div>` : ""}
+    ${outro(s)}
+  </div>
+</section>`,
+
+  // quote: one large line, optional eyebrow/heading above it (HOME2's magenta pre-footer).
+  quote: (s) => `
+<section class="quote${tone(s)}"${s.id ? ` id="${esc(s.id)}"` : ""}>
+  <div class="wrap">
+    ${s.eyebrow ? `<p class="eyebrow">${esc(s.eyebrow)}</p>` : ""}
+    ${s.title ? `<h2>${title(s.title)}</h2>` : ""}
+    <p class="quote__text">${rich(s.text)}</p>
+  </div>
+</section>`,
+
+  // notice: small print (legal / compliance), full width, above the footer.
+  notice: (s) => `
+<section class="notice${tone(s)}"${s.id ? ` id="${esc(s.id)}"` : ""}>
+  <div class="wrap"><p>${rich(s.text)}</p></div>
+</section>`,
 };
+
+function form(s) {
+  return `<form name="${esc(s.form.name)}" method="POST" action="/thank-you/" data-netlify="true" netlify-honeypot="company_website">
+        <input type="hidden" name="form-name" value="${esc(s.form.name)}">
+        <p class="hp"><label>Leave this empty <input name="company_website" tabindex="-1" autocomplete="off"></label></p>
+        ${s.form.fields.map((f) => `
+        <label class="field"><span>${esc(f.label)}</span>
+          ${f.type === "textarea"
+            ? `<textarea name="${esc(f.name)}" rows="5" placeholder="${esc(f.label)}" ${f.required ? "required" : ""}></textarea>`
+            : `<input name="${esc(f.name)}" type="${esc(f.type)}" placeholder="${esc(f.label)}" ${f.required ? "required" : ""} autocomplete="${f.type === "email" ? "email" : f.name === "name" ? "name" : "off"}">`}
+        </label>`).join("")}
+        <button class="btn" type="submit">${esc(s.form.submit)}</button>
+      </form>`;
+}
 
 const nav = site.sections.filter((s) => s.nav).map((s) => `<a href="#${esc(s.id)}">${esc(s.nav)}</a>`).join("");
 // Theme colours and font come from site.json, so one stylesheet serves every client.
@@ -145,19 +308,19 @@ const page = (title, main, { canonical = S.url, robots = "index,follow" } = {}) 
 <meta name="description" content="${esc(S.description)}">
 <meta name="robots" content="${robots}">
 ${canonical ? `<link rel="canonical" href="${esc(canonical)}">` : ""}
-<meta property="og:title" content="${esc(S.title)}"><meta property="og:description" content="${esc(S.description)}"><meta property="og:type" content="website">
+<meta property="og:title" content="${esc(S.title)}"><meta property="og:description" content="${esc(S.description)}"><meta property="og:type" content="website">${S.og_image ? `<meta property="og:image" content="${esc(new URL(S.og_image, S.url).href)}"><meta name="twitter:card" content="summary_large_image">` : ""}
 ${S.favicon ? `<link rel="icon" href="/${esc(S.favicon)}" sizes="32x32">` : ""}${S.favicon_large ? `<link rel="icon" href="/${esc(S.favicon_large)}" sizes="192x192">` : ""}${S.apple_touch_icon ? `<link rel="apple-touch-icon" href="/${esc(S.apple_touch_icon)}">` : ""}
 ${font}
 <style>${vars}</style>
 <link rel="stylesheet" href="/theme/styles.css">
 <script src="/theme/scripts.js" defer></script>
 </head>
-<body>
+<body${T.skin ? ` class="skin-${esc(T.skin)}"` : ""}>
 <header class="topbar">
   <div class="wrap topbar__inner">
     <a class="logo" href="/#top"><img src="/${esc(S.logo)}" alt="${esc(S.title)}"></a>
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu"><span></span><span></span><span></span></button>
-    <nav id="nav" class="nav">${nav.replace(/href="#/g, 'href="/#')}</nav>
+    <nav id="nav" class="nav">${nav.replace(/href="#/g, 'href="/#')}</nav>${S.header_cta ? `<a class="btn header-cta" href="${esc(S.header_cta.href)}">${esc(S.header_cta.label)}</a>` : ""}
   </div>
 </header>
 <main>${main}</main>
@@ -165,7 +328,7 @@ ${font}
   <div class="wrap footer__inner">
     <a class="logo" href="/#top"><img src="/${esc(S.logo)}" alt="${esc(S.title)}"></a>
     <nav class="nav nav--footer">${nav.replace(/href="#/g, 'href="/#')}</nav>
-    ${S.credit ? `<a class="credit" href="${esc(S.credit.href)}" target="_blank" rel="noopener">${esc(S.credit.text)}</a>` : ""}
+    ${S.footer_text || S.social ? `<div class="footer__meta">${list(S.footer_text).map((t) => `<span>${esc(t)}</span>`).join("")}${list(S.social).map((l) => `<a href="${esc(l.href)}"${/^https?:/.test(l.href) ? ' target="_blank" rel="noopener"' : ""}>${esc(l.label)}</a>`).join("")}</div>` : ""}${S.credit ? `<a class="credit" href="${esc(S.credit.href)}" target="_blank" rel="noopener">${esc(S.credit.text)}</a>` : ""}
   </div>
 </footer>
 </body>
@@ -179,15 +342,15 @@ const main = site.sections.map((s) => {
   return R[s.type](s);
 }).join("\n");
 // Relative asset paths in site.json ("images/x.png") are served from the site root.
-writeFileSync(join(out, "index.html"), page(S.title, main).replace(/(src|href)="images\//g, '$1="/images/'));
+writeFileSync(join(out, "index.html"), rel(page(S.title, main).replace(/(src|href)="images\//g, '$1="/images/')));
 
 const contact = site.sections.find((s) => s.type === "contact");
 if (contact) {
   const ty = contact.form.thank_you ?? { title: "Thank you", text: "We received your message." };
   mkdirSync(join(out, "thank-you"), { recursive: true });
   writeFileSync(join(out, "thank-you", "index.html"),
-    page(`${ty.title} — ${S.title}`, `<section class="thanks"><div class="wrap"><h1>${esc(ty.title)}</h1><p>${rich(ty.text)}</p><a class="btn" href="/">Back to the homepage</a></div></section>`,
-      { canonical: null, robots: "noindex" }));
+    rel(page(`${ty.title} — ${S.title}`, `<section class="thanks"><div class="wrap"><h1>${esc(ty.title)}</h1><p>${rich(ty.text)}</p><a class="btn" href="/">Back to the homepage</a></div></section>`,
+      { canonical: null, robots: "noindex" }), "../"));
 }
 
 cpSync(join(here, "theme"), join(out, "theme"), { recursive: true });

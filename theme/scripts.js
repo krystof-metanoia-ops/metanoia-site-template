@@ -47,3 +47,18 @@ document.addEventListener("DOMContentLoaded", () => {
     render();
   });
 });
+
+// Portfolio filter (opt-in, carousel layout "grid" + filter: true; 2026-10-29). Without JS every
+// card stays visible, so the filter is a convenience, never a gate.
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".pgrid__filter").forEach((bar) => {
+    const cards = bar.parentElement.querySelectorAll(".pcard");
+    bar.addEventListener("click", (e) => {
+      const chip = e.target.closest(".chip");
+      if (!chip) return;
+      bar.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
+      const cat = chip.dataset.cat;
+      cards.forEach((card) => { card.hidden = Boolean(cat) && card.dataset.cat !== cat; });
+    });
+  });
+});
