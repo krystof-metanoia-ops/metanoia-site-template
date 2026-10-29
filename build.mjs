@@ -297,8 +297,11 @@ function form(s) {
 
 const nav = site.sections.filter((s) => s.nav).map((s) => `<a href="#${esc(s.id)}">${esc(s.nav)}</a>`).join("");
 // Theme colours and font come from site.json, so one stylesheet serves every client.
-const vars = `:root{--ink:${T.ink ?? "#070548"};--accent:${T.accent ?? "#E90055"};--accent-dark:${T.accent_dark ?? "#C00153"};--secondary:${T.secondary ?? "#2C2981"};--surface:${T.surface ?? "#E9E9E9"};--muted:${T.muted ?? "#464646"};--font:"${T.font ?? "Outfit"}",system-ui,sans-serif}`;
-const font = T.font ? `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(T.font)}:wght@300..700&display=swap" rel="stylesheet">` : "";
+const vars = `:root{--ink:${T.ink ?? "#070548"};--accent:${T.accent ?? "#E90055"};--accent-dark:${T.accent_dark ?? "#C00153"};--secondary:${T.secondary ?? "#2C2981"};--surface:${T.surface ?? "#E9E9E9"};--muted:${T.muted ?? "#464646"};--font:"${T.font ?? "Outfit"}",system-ui,sans-serif${T.font_label ? `;--font-label:"${T.font_label}",ui-monospace,monospace` : ""}}`;
+// font_axis (opt-in, 2026-10-29): the weight range to load, e.g. "100..900" for an ultra-light display style.
+// font_label (opt-in): a second Google font for small labels (exposed as --font-label). Defaults keep old output.
+const fam = (f, axis) => `family=${encodeURIComponent(f)}:wght@${axis}`;
+const font = T.font ? `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?${fam(T.font, T.font_axis ?? "300..700")}${T.font_label ? `&${fam(T.font_label, "400..600")}` : ""}&display=swap" rel="stylesheet">` : "";
 
 const page = (title, main, { canonical = S.url, robots = "index,follow" } = {}) => `<!doctype html>
 <html lang="${esc(S.lang ?? "en")}">

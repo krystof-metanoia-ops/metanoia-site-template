@@ -390,3 +390,107 @@ h2{font-size:clamp(1.6rem,2.6vw,2.2rem);text-align:center;margin-bottom:2rem}
 .tone--white .stats{background:color-mix(in srgb,var(--accent) 14%,transparent)}
 .tone--white .stat strong,.tone--light .stat strong{color:var(--accent)}
 .tone--white .stat span{color:var(--muted)}
+
+/* =====================================================================================
+   Style skins (2026-10-29), each opt-in via theme.skin, layered on ["bold","light"]:
+   - skin-editorial: big light-weight headlines, mono labels, thin rules, flat cards, rectangular photo.
+     Direction taken from editorial health-VC sites Maria likes (look only; no code or assets copied).
+   - skin-airy: ultra-light lowercase display headings, a large statement paragraph, solid accent
+     circles, black-and-white photos.
+   ===================================================================================== */
+/* ---- editorial ---- */
+.skin-editorial{--radius:6px;letter-spacing:.005em}
+.skin-editorial h1,.skin-editorial .hero-split h1{font-weight:300;letter-spacing:-.025em;line-height:1.05}
+.skin-editorial .hero-split h1{font-size:clamp(2.6rem,5.4vw,5rem)}
+.skin-editorial .sec h2,.skin-editorial .textsec h2{font-weight:300;font-size:clamp(2rem,3.6vw,3.2rem);letter-spacing:-.02em;line-height:1.1;max-width:780px}
+.skin-editorial h2 em,.skin-editorial h1 em{font-style:normal}
+.skin-editorial .eyebrow,.skin-editorial .hero-split__eyebrow{font-family:var(--font-label,var(--font));font-weight:400;letter-spacing:.06em;font-size:.72rem;color:var(--muted)}
+.skin-editorial .sec__head>.eyebrow::after,.skin-editorial .textsec>.wrap>.eyebrow::after{display:none}
+.skin-editorial .sec__head>.eyebrow::before,.skin-editorial .textsec>.wrap>.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.skin-editorial .btn{border-radius:var(--radius);text-transform:none;letter-spacing:0;font-size:.95rem;font-weight:500;padding:.8rem 1.4rem}
+.skin-editorial .header-cta.btn{font-size:.8rem;padding:.55rem 1rem;text-transform:none;letter-spacing:0}
+.skin-editorial .topbar .nav a{text-transform:none;letter-spacing:0;font-size:.9rem}
+.skin-editorial .sec{padding:7.5rem 0;border-top:1px solid color-mix(in srgb,var(--ink) 10%,transparent)}
+.skin-editorial .tone--white,.skin-editorial .tone--light{background:#fff}
+.skin-editorial .tone--dark{background:var(--ink)}
+.skin-editorial .tone--white .tiles__grid,.skin-editorial .tone--light .tiles__grid{gap:0;border-top:1px solid color-mix(in srgb,var(--ink) 14%,transparent)}
+.skin-editorial .tone--white .tile,.skin-editorial .tone--light .tile{border:0;border-radius:0;border-bottom:1px solid color-mix(in srgb,var(--ink) 14%,transparent);padding:2.25rem 2rem 2.25rem 0;background:none;box-shadow:none}
+.skin-editorial .tile__num{font-family:var(--font-label,var(--font));font-weight:400;color:var(--accent)}
+.skin-editorial .tile h3,.skin-editorial .pcard h3,.skin-editorial .gp__card h3,.skin-editorial .aside-card h3{font-weight:400;font-size:1.35rem;letter-spacing:-.01em}
+.skin-editorial .aside-card,.skin-editorial .pcard,.skin-editorial .gp__card{border-radius:var(--radius);box-shadow:none;border:1px solid color-mix(in srgb,var(--ink) 12%,transparent)}
+.skin-editorial .pcard{border-left-width:1px}
+.skin-editorial .aside-card:hover,.skin-editorial .pcard:hover{transform:none;border-color:var(--ink)}
+.skin-editorial .textsec__lead{border-left:0;padding-left:0;font-size:1.5rem;font-weight:300;line-height:1.4}
+.skin-editorial .region strong{font-weight:300;font-size:3rem;color:var(--ink)}
+.skin-editorial .region{border-top:1px solid var(--ink)}
+.skin-editorial .stats{border:0;border-radius:0;background:none;gap:2rem}
+.skin-editorial .stat{background:none;border-top:1px solid currentColor;padding:1.5rem 0 0}
+.skin-editorial .stat strong{font-size:2rem;font-weight:300;letter-spacing:-.02em}
+.skin-editorial .chip{border-radius:var(--radius);font-weight:400;letter-spacing:0}
+.skin-editorial .strip{padding:2.5rem 0}
+.skin-editorial .strip__item strong{font-weight:400;font-size:1.25rem}
+.skin-editorial .strip__item span{font-family:var(--font-label,var(--font));font-weight:400;letter-spacing:.04em;font-size:.7rem}
+.skin-editorial .hero-split.tone--white{background:#fff;min-height:auto}
+.skin-editorial .hero-split.tone--white .hero-split__text{padding-top:7rem;padding-bottom:5rem}
+.skin-editorial .hero-split.tone--white .hero-split__media{padding:2rem max(16px,calc((100vw - 1180px)/2)) 2rem 0}
+.skin-editorial .hero-split.tone--white .hero-split__media img{-webkit-mask-image:none;mask-image:none;border-radius:16px;filter:grayscale(1)}
+.skin-editorial .quote__text{font-style:normal;font-weight:300;font-size:clamp(1.6rem,3vw,2.6rem);letter-spacing:-.015em}
+.skin-editorial .gp__photo{border-radius:var(--radius);border:0;filter:grayscale(1)}
+.skin-editorial .decor{display:none}
+@media (max-width:820px){.skin-editorial .hero-split.tone--white .hero-split__media{padding:0 16px 2rem;height:340px}.skin-editorial .sec{padding:4.5rem 0}}
+
+/* ---- airy ---- */
+.skin-airy h1,.skin-airy .hero-split h1{font-weight:200;letter-spacing:-.02em;line-height:1.02}
+.skin-airy .hero-split h1{font-size:clamp(2.8rem,6vw,5.6rem)}
+.skin-airy .hero-split h1 em{font-weight:600}
+.skin-airy .sec h2,.skin-airy .textsec h2{font-weight:200;text-transform:lowercase;font-size:clamp(3rem,8vw,7rem);letter-spacing:-.035em;line-height:.95;margin-bottom:2rem;max-width:none}
+.skin-airy .sec h2 em,.skin-airy .textsec h2 em{color:var(--accent);font-weight:200}
+.skin-airy .eyebrow{font-weight:500;letter-spacing:.14em}
+.skin-airy .sec__head>.eyebrow::after,.skin-airy .textsec>.wrap>.eyebrow::after{display:none}
+.skin-airy .sec__head>.eyebrow::before,.skin-airy .textsec>.wrap>.eyebrow::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.skin-airy .topbar .nav a{text-transform:lowercase;letter-spacing:0;font-size:.95rem;font-weight:300}
+.skin-airy .btn{text-transform:lowercase;letter-spacing:.02em;font-weight:400;font-size:.95rem}
+.skin-airy .header-cta.btn{text-transform:lowercase;letter-spacing:0;font-weight:400;font-size:.85rem}
+.skin-airy .tone--light{background:#fff}
+.skin-airy .tone--white p,.skin-airy .tone--light p{font-weight:300}
+.skin-airy .textsec__quote,.skin-airy .textsec__lead{font-size:clamp(1.4rem,2.6vw,2.2rem)!important;font-weight:200!important;line-height:1.35!important;border:0!important;padding:0!important;font-style:normal!important;color:var(--ink)!important}
+.skin-airy .textsec__lead strong,.skin-airy .textsec__quote strong{font-weight:700}
+.skin-airy .sec{padding:8rem 0}
+.skin-airy .sec::before{content:"";position:absolute;width:clamp(180px,26vw,360px);aspect-ratio:1;border-radius:50%;background:var(--accent);opacity:.9;z-index:0;pointer-events:none}
+.skin-airy .sec:nth-of-type(3n+1)::before{right:-8%;top:-6%}
+.skin-airy .sec:nth-of-type(3n+2)::before{left:-10%;bottom:-12%;background:color-mix(in srgb,var(--accent) 18%,#fff)}
+.skin-airy .sec:nth-of-type(3n)::before{display:none}
+.skin-airy .sec>.wrap{position:relative;z-index:1}
+.skin-airy .decor span{filter:none;opacity:1;border-radius:50%}
+.skin-airy .decor span:nth-child(1){width:110px;height:110px;left:auto;right:46%;top:18%;background:var(--accent)}
+.skin-airy .decor span:nth-child(2){width:46px;height:46px;left:8%;bottom:14%;background:var(--accent)}
+.skin-airy .decor span:nth-child(3){width:260px;height:260px;left:-60px;top:-80px;background:color-mix(in srgb,var(--accent) 12%,#fff)}
+.skin-airy .hero-split.tone--white,.skin-airy .hero-split.tone--light{background:#fff}
+.skin-airy .hero-split__media img{filter:grayscale(1)}
+.skin-airy .gp__photo,.skin-airy .pcard__logo{filter:grayscale(1)}
+.skin-airy .tile,.skin-airy .pcard,.skin-airy .aside-card,.skin-airy .gp__card{border-radius:0!important;border:0!important;background:color-mix(in srgb,var(--ink) 4%,#fff)!important;box-shadow:none!important}
+.skin-airy .tile h3,.skin-airy .pcard h3,.skin-airy .aside-card h3,.skin-airy .gp__card h3{font-weight:300;font-size:1.5rem;letter-spacing:-.01em}
+.skin-airy .tile__num{font-size:2.6rem;font-weight:200;letter-spacing:-.02em;color:var(--accent)}
+.skin-airy .tiles__grid{background:none!important;border:0!important;gap:1rem!important}
+.skin-airy .pcard__foot a::after{content:" →"}
+.skin-airy .chip{border:0;background:none;padding:.3rem .6rem;font-weight:300;color:var(--ink)}
+.skin-airy .chip[aria-pressed="true"]{background:none;color:var(--accent);font-weight:600}
+.skin-airy .chip[aria-pressed="true"]::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:.35rem;vertical-align:1px}
+.skin-airy .strip.tone--white{border:0}
+.skin-airy .strip__item strong{font-weight:300;font-size:1.3rem}
+.skin-airy .quote__text{font-style:normal;font-weight:200;font-size:clamp(1.8rem,4vw,3.4rem);text-transform:lowercase;letter-spacing:-.02em}
+@media (max-width:820px){.skin-airy .sec{padding:4.5rem 0}.skin-airy .sec::before{width:140px}.skin-airy .decor span:nth-child(1){right:8%;top:6%;width:60px;height:60px}}
+/* editorial + airy: stacked hero (headline first, then one wide photo), so a group photo is never
+   cropped into a narrow column. Hero image object-position can be tuned per site via --hero-pos. */
+.skin-editorial .hero-split,.skin-airy .hero-split{grid-template-columns:1fr;min-height:auto}
+.skin-editorial .hero-split .hero-split__text,.skin-airy .hero-split .hero-split__text{padding:6.5rem max(16px,calc((100vw - 1180px)/2)) 3rem}
+.skin-editorial .hero-split h1,.skin-airy .hero-split h1{max-width:15em}
+.skin-editorial .hero-split p,.skin-airy .hero-split p{max-width:620px}
+.skin-editorial .hero-split .hero-split__media,.skin-airy .hero-split .hero-split__media{padding:0 max(16px,calc((100vw - 1180px)/2)) 3.5rem;height:auto}
+.skin-editorial .hero-split .hero-split__media img,.skin-airy .hero-split .hero-split__media img{height:clamp(300px,46vw,640px);object-position:var(--hero-pos,center 25%);border-radius:16px;-webkit-mask-image:none;mask-image:none}
+.skin-airy .hero-split .hero-split__media img{border-radius:0}
+@media (max-width:820px){.skin-editorial .hero-split .hero-split__media,.skin-airy .hero-split .hero-split__media{height:auto;padding-bottom:2rem}.skin-editorial .hero-split .hero-split__text,.skin-airy .hero-split .hero-split__text{padding-top:3.5rem}}
+.person__photo img{object-position:center 18%}
+.skin-editorial .hero-split.tone--white .hero-split__media{padding:0 max(16px,calc((100vw - 1180px)/2)) 3.5rem}
+.skin-airy .decor span:nth-child(1){right:7%;top:10%;left:auto}
+.skin-airy .btn,.skin-airy .header-cta.btn{text-transform:none}
