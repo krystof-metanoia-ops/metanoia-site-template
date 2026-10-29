@@ -81,3 +81,25 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(tick, 400);
   });
 });
+
+// Raise bar (opt-in via site.raise_bar; 2026-10-29): a small "Now raising" pill with one CTA. It shows
+// only between the hero and the contact section, so it never covers the first screen or the form.
+document.addEventListener("DOMContentLoaded", () => {
+  const bar = document.querySelector(".raise-bar");
+  const hero = document.querySelector("main > section");
+  const contact = document.getElementById("contact");
+  if (!bar || !hero) return;
+  bar.hidden = false; bar.classList.add("is-hiding");
+  let pastHero = false, atContact = false;
+  const update = () => bar.classList.toggle("is-hiding", !pastHero || atContact);
+  new IntersectionObserver(([e]) => { pastHero = !e.isIntersecting; update(); }).observe(hero);
+  if (contact) new IntersectionObserver(([e]) => { atContact = e.isIntersecting; update(); }, { threshold: 0.05 }).observe(contact);
+});
+
+// Campaign parameter (opt-in, 2026-10-29): a hidden form field with data-from-param="c" is filled from
+// ?c=<id> in the page address, so a cold-email link can say which contact or campaign the visitor came
+// from. It travels only inside the form submission: no cookies, no tracking scripts.
+document.addEventListener("DOMContentLoaded", () => {
+  const q = new URLSearchParams(location.search);
+  document.querySelectorAll("input[data-from-param]").forEach((i) => { const v = q.get(i.dataset.fromParam); if (v) i.value = v.slice(0, 120); });
+});

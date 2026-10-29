@@ -28,3 +28,8 @@ old site.json with both versions and diffing).
 - v3 (2026-10-29): `theme.skin` may be a list (`["bold","light"]` = light header/hero/footer on the bold layouts) ·
   tone `white` · hero `decor: true` (soft drifting colour fields) and `type_eyebrow: true` · `theme.motion: true`
   (sections fade up on scroll, typed eyebrow; off under reduced-motion and without JS) · 5 tiles lay out 2 + 3.
+- v7 (2026-10-29): `{{text}}` in any text = a yellow placeholder chip for facts the client must supply ·
+  `filter_counts: true` on the portfolio grid · form field types `select` (options), `checkbox`, `hidden` with
+  `from_param: "c"` (fills from `?c=<id>` in the address so a cold-email link can say who came; sent only with the
+  form, no cookies, no tracking scripts) · new section types `compare` (e.g. Fund I → Fund II) and `faq`
+  (native details) · `site.raise_bar {text, cta}`: a small "now raising" pill shown only between hero and contact.

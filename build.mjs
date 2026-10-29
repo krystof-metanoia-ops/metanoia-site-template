@@ -33,7 +33,7 @@ const S = site.site, T = site.theme ?? {};
 // ---- escaping: every string from site.json is escaped. The ONE markup allowed in text is
 // **bold** (used for a lead-in phrase), so the client's agent can't inject HTML by accident.
 const esc = (s = "") => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-const rich = (s = "") => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
+const rich = (s = "") => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\{\{(.+?)\}\}/g, '<span class="ph">$1</span>').replace(/\n/g, "<br>");
 const paras = (x) => (Array.isArray(x) ? x : x ? [x] : []).map((p) => `<p>${rich(p)}</p>`).join("");
 
 // ---- opt-in additions (2026-10-29, built to match Kidron's "HOME2" design; Krystof's call to extend
@@ -165,7 +165,7 @@ const R = {
   carousel: (s) => s.layout === "grid" ? `
 <section class="sec pgrid${tone(s)}" id="${esc(s.id)}">
   <div class="wrap">${secHead(s)}
-    ${s.filter ? `<div class="pgrid__filter" role="group" aria-label="Filter by area"><button type="button" class="chip" aria-pressed="true" data-cat="">All</button>${[...new Set(s.items.map((c) => c.category).filter(Boolean))].map((c) => `<button type="button" class="chip" aria-pressed="false" data-cat="${esc(c)}">${esc(c)}</button>`).join("")}</div>` : ""}
+    ${s.filter ? `<div class="pgrid__filter" role="group" aria-label="Filter by area"><button type="button" class="chip" aria-pressed="true" data-cat="">All</button>${[...new Set(s.items.map((c) => c.category).filter(Boolean))].map((c) => `<button type="button" class="chip" aria-pressed="false" data-cat="${esc(c)}">${esc(c)}${s.filter_counts ? ` <span class="chip__n">${s.items.filter((i) => i.category === c).length}</span>` : ""}</button>`).join("")}</div>` : ""}
     <div class="pgrid__grid">
       ${s.items.map((c) => `
       <article class="pcard" data-cat="${esc(c.category ?? "")}">
@@ -232,7 +232,8 @@ const R = {
   // ---- new section types (opt-in, 2026-10-29) ----
   // strip: a band of short labelled items (HOME2's magenta "pillars strip").
   strip: (s) => `
-<section class="strip${tone(s)}"${s.id ? ` id="${esc(s.id)}"` : ""}>
+<section class="strip${tone(s)}"${s.id ? ` id="${esc(s.id)}"` : ""}>${s.title ? `
+  <div class="wrap"><p class="strip__title">${esc(s.title)}</p></div>` : ""}
   <div class="wrap strip__inner">
     ${s.items.map((i) => `<div class="strip__item"><strong>${esc(i.title)}</strong>${i.text ? `<span>${esc(i.text)}</span>` : ""}</div>`).join("")}
   </div>
@@ -264,6 +265,32 @@ const R = {
   </div>
 </section>`,
 
+  // compare (opt-in, 2026-10-29): two columns joined by an arrow, e.g. "Fund I → Fund II". The arrow line
+  // draws itself once when the section enters the viewport (theme.motion); static without motion.
+  compare: (s) => `
+<section class="sec compare${tone(s)}"${s.id ? ` id="${esc(s.id)}"` : ""}>
+  <div class="wrap">${secHead(s)}
+    <div class="compare__grid">
+      ${s.columns.map((c, i) => `${i ? `<div class="compare__arrow" aria-hidden="true"><span></span></div>` : ""}
+      <div class="compare__col">
+        ${c.label ? `<p class="eyebrow">${esc(c.label)}</p>` : ""}
+        <h3>${head(c.title)}</h3>
+        <ul class="bullets">${list(c.points).map((b) => `<li>${rich(b)}</li>`).join("")}</ul>
+      </div>`).join("")}
+    </div>${outro(s)}
+  </div>
+</section>`,
+
+  // faq (opt-in): questions as native <details>, so answers open without JavaScript.
+  faq: (s) => `
+<section class="sec faq${tone(s)}"${s.id ? ` id="${esc(s.id)}"` : ""}>
+  <div class="wrap">${secHead(s)}
+    <div class="faq__list">
+      ${s.items.map((q) => `<details class="faq__item"><summary>${esc(q.q)}</summary><div>${paras(q.a)}</div></details>`).join("")}
+    </div>${outro(s)}
+  </div>
+</section>`,
+
   // quote: one large line, optional eyebrow/heading above it (HOME2's magenta pre-footer).
   quote: (s) => `
 <section class="quote${tone(s)}"${s.id ? ` id="${esc(s.id)}"` : ""}>
@@ -285,7 +312,12 @@ function form(s) {
   return `<form name="${esc(s.form.name)}" method="POST" action="/thank-you/" data-netlify="true" netlify-honeypot="company_website">
         <input type="hidden" name="form-name" value="${esc(s.form.name)}">
         <p class="hp"><label>Leave this empty <input name="company_website" tabindex="-1" autocomplete="off"></label></p>
-        ${s.form.fields.map((f) => `
+        ${s.form.fields.map((f) => f.type === "hidden" ? `
+        <input type="hidden" name="${esc(f.name)}" value=""${f.from_param ? ` data-from-param="${esc(f.from_param)}"` : ""}>` : f.type === "checkbox" ? `
+        <label class="field field--check"><input name="${esc(f.name)}" type="checkbox" value="yes" ${f.required ? "required" : ""}> <em>${rich(f.label)}</em></label>` : f.type === "select" ? `
+        <label class="field"><span>${esc(f.label)}</span>
+          <select name="${esc(f.name)}" ${f.required ? "required" : ""}><option value="">${esc(f.label)}</option>${(f.options ?? []).map((o) => `<option>${esc(o)}</option>`).join("")}</select>
+        </label>` : `
         <label class="field"><span>${esc(f.label)}</span>
           ${f.type === "textarea"
             ? `<textarea name="${esc(f.name)}" rows="5" placeholder="${esc(f.label)}" ${f.required ? "required" : ""}></textarea>`
@@ -327,7 +359,8 @@ ${font}
     <nav id="nav" class="nav">${nav.replace(/href="#/g, 'href="/#')}</nav>${S.header_cta ? `<a class="btn header-cta" href="${esc(S.header_cta.href)}">${esc(S.header_cta.label)}</a>` : ""}
   </div>
 </header>
-<main>${main}</main>
+<main>${main}</main>${S.raise_bar ? `
+<div class="raise-bar" hidden><p>${rich(S.raise_bar.text)}</p>${S.raise_bar.cta ? `<a class="btn" href="${esc(S.raise_bar.cta.href)}">${esc(S.raise_bar.cta.label)}</a>` : ""}</div>` : ""}
 <footer class="footer">
   <div class="wrap footer__inner">
     <a class="logo" href="/#top"><img src="/${esc(S.logo)}" alt="${esc(S.title)}"></a>
