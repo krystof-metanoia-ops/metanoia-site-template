@@ -25,3 +25,6 @@ old site.json with both versions and diffing).
   · `contact.layout: "plain"`.
 - New section types: `strip` · `text` (`lead`, `left`, `text`, `quote`, `bullets`, `regions`, `aside`, `stats`) · `quote` · `notice`.
 - `--relative` build flag: relative paths, for a preview opened from disk (file://). Never used on Netlify.
+- v3 (2026-10-29): `theme.skin` may be a list (`["bold","light"]` = light header/hero/footer on the bold layouts) ·
+  tone `white` · hero `decor: true` (soft drifting colour fields) and `type_eyebrow: true` · `theme.motion: true`
+  (sections fade up on scroll, typed eyebrow; off under reduced-motion and without JS) · 5 tiles lay out 2 + 3.

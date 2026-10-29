@@ -61,8 +61,9 @@ const btns = (...bs) => bs.filter(Boolean).map((b, i) => `<a class="btn${i ? " b
 const R = {
   hero: (s) => s.layout === "split" ? `
 <section class="hero-split${tone(s)}" id="${esc(s.id)}">
+  ${s.decor ? `<div class="decor" aria-hidden="true"><span></span><span></span><span></span></div>` : ""}
   <div class="hero-split__text">
-    ${s.eyebrow ? `<p class="hero-split__eyebrow">${esc(s.eyebrow)}</p>` : ""}
+    ${s.eyebrow ? `<p class="hero-split__eyebrow"${s.type_eyebrow ? ` data-type="${esc(s.eyebrow)}"` : ""}>${esc(s.eyebrow)}</p>` : ""}
     <h1>${head(s.heading)}</h1>
     ${paras(s.text)}
     <div class="btn-row">${btns(s.cta, s.cta2)}</div>
@@ -87,7 +88,7 @@ const R = {
   cards: (s) => s.layout === "tiles" ? `
 <section class="sec tiles${tone(s)}" id="${esc(s.id)}">
   <div class="wrap">${secHead(s)}
-    <div class="tiles__grid tiles__grid--${Math.min(s.items.length, 4)}">
+    <div class="tiles__grid tiles__grid--${s.items.length === 5 ? 5 : Math.min(s.items.length, 4)}">
       ${s.items.map((c) => `
       <article class="tile">
         ${c.num ? `<p class="tile__num">${esc(c.num)}</p>` : ""}
@@ -315,7 +316,7 @@ ${font}
 <link rel="stylesheet" href="/theme/styles.css">
 <script src="/theme/scripts.js" defer></script>
 </head>
-<body${T.skin ? ` class="skin-${esc(T.skin)}"` : ""}>
+<body${T.skin ? ` class="${list(T.skin).map((k) => `skin-${esc(k)}`).join(" ")}"` : ""}${T.motion ? " data-motion" : ""}>
 <header class="topbar">
   <div class="wrap topbar__inner">
     <a class="logo" href="/#top"><img src="/${esc(S.logo)}" alt="${esc(S.title)}"></a>

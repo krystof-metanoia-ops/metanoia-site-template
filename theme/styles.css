@@ -298,3 +298,95 @@ h2{font-size:clamp(1.6rem,2.6vw,2.2rem);text-align:center;margin-bottom:2rem}
 @media (max-width:480px){.header-cta.btn{display:none}}
 @media (prefers-reduced-motion:reduce){.hero-split__eyebrow::before{animation:none}}
 .contact-plain .eyebrow::after{display:none}
+
+/* =====================================================================================
+   v3 additions (2026-10-29), from Maria's call that day: "lighter", "more modern", "not too much".
+   All opt-in: theme.skin ["bold","light"] · tone "white" · hero "decor" · theme.motion.
+   ===================================================================================== */
+/* 5 tiles: two wide on top, three below, so no tile sits alone in a row (was an orphan in a 4-col grid) */
+.tiles__grid--5{grid-template-columns:repeat(6,1fr)}
+.tiles__grid--5>.tile{grid-column:span 2}
+.tiles__grid--5>.tile:nth-child(-n+2){grid-column:span 3}
+
+/* light skin, layered on the bold skin: white header and hero, ink text, accent only as accent */
+.skin-light{background:#fff}
+.skin-light .topbar{background:rgba(255,255,255,.88);backdrop-filter:blur(12px);border-bottom:1px solid color-mix(in srgb,var(--accent) 12%,transparent)}
+.skin-light .topbar .nav a{color:color-mix(in srgb,var(--ink) 75%,transparent)}
+.skin-light .topbar .nav a:hover{color:var(--accent)}
+.skin-light .menu-toggle span{background:var(--ink)}
+.skin-light h1,.skin-light h2,.skin-light h3{font-weight:500}
+.skin-light .tile h3,.skin-light .aside-card h3,.skin-light .gp__card h3,.skin-light .pcard h3{font-weight:600}
+.skin-light .footer{background:#fff;color:var(--ink);border-top:1px solid color-mix(in srgb,var(--accent) 12%,transparent)}
+.skin-light .footer__meta,.skin-light .footer__meta a{color:var(--muted)}
+.skin-light .footer__meta a:hover{color:var(--accent)}
+.skin-light .notice{background:#fff;border-top:1px solid color-mix(in srgb,var(--accent) 10%,transparent)}
+.skin-light .notice p{color:color-mix(in srgb,var(--muted) 70%,transparent)}
+.skin-light .btn--ghost{color:var(--ink);border-color:color-mix(in srgb,var(--ink) 25%,transparent)}
+.skin-light .btn--ghost:hover{border-color:var(--ink)}
+@media (max-width:820px){
+  .skin-light .nav:not(.nav--footer){background:#fff}
+  .skin-light .topbar .nav:not(.nav--footer) a{color:var(--ink);border-bottom-color:color-mix(in srgb,var(--accent) 15%,transparent)}
+  .tiles__grid--5{grid-template-columns:1fr}
+  .tiles__grid--5>.tile,.tiles__grid--5>.tile:nth-child(-n+2){grid-column:auto}
+}
+
+/* tone "white" and the light hero */
+.tone--white{background:#fff;color:var(--ink)}
+.tone--white p,.tone--white li{color:color-mix(in srgb,var(--ink) 82%,var(--accent) 18%)}
+.tone--white .sec__intro{color:var(--muted)}
+.tone--white .tile,.tone--white .pcard,.tone--white .aside-card{background:#fff}
+.tone--white .tiles__grid{background:none;border:0;gap:1.25rem;overflow:visible}
+.tone--white .tile{border:1px solid color-mix(in srgb,var(--accent) 16%,transparent);border-radius:14px}
+.tone--white .tile:hover{border-color:var(--accent);box-shadow:0 10px 30px color-mix(in srgb,var(--accent) 8%,transparent)}
+.tone--light .tile,.tone--light .pcard,.tone--light .aside-card{border-radius:14px}
+.hero-split.tone--light,.hero-split.tone--white{background:linear-gradient(120deg,#fff 0%,var(--surface) 100%);color:var(--ink)}
+.hero-split.tone--light h1,.hero-split.tone--white h1{color:var(--ink);font-weight:500}
+.hero-split.tone--light h1 em,.hero-split.tone--white h1 em{color:var(--accent)}
+.hero-split.tone--light p,.hero-split.tone--white p{color:var(--muted)}
+.hero-split.tone--light .hero-split__eyebrow,.hero-split.tone--white .hero-split__eyebrow{color:var(--accent)}
+.hero-split.tone--light .hero-split__tagline,.hero-split.tone--white .hero-split__tagline{color:color-mix(in srgb,var(--muted) 70%,transparent)}
+.hero-split.tone--light .hero-split__text::after,.hero-split.tone--white .hero-split__text::after{display:none}
+/* the photo fades into the page instead of ending on a hard edge (hides the cut-out halo in the current
+   duo photo; when Maria's original photo arrives, swap hero.image in site.json, nothing else) */
+.hero-split.tone--light .hero-split__media img,.hero-split.tone--white .hero-split__media img{-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 22%);mask-image:linear-gradient(90deg,transparent 0%,#000 22%);object-position:right center}
+.hero-split{position:relative}
+.hero-split__text,.hero-split__media{position:relative;z-index:1}
+
+/* decor: three soft, slowly drifting colour fields behind the hero (CSS only; still without motion) */
+.decor{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.decor span{position:absolute;border-radius:50%;filter:blur(60px);opacity:.35}
+.decor span:nth-child(1){width:420px;height:420px;left:-120px;top:-80px;background:color-mix(in srgb,var(--accent) 35%,#fff)}
+.decor span:nth-child(2){width:300px;height:300px;left:30%;bottom:-120px;background:color-mix(in srgb,var(--accent) 20%,#fff)}
+.decor span:nth-child(3){width:220px;height:220px;left:42%;top:12%;background:color-mix(in srgb,var(--secondary) 18%,#fff)}
+
+/* motion (theme.motion): drifting decor, sections fade up once as they enter, typed eyebrow.
+   All off under prefers-reduced-motion; without JS everything is simply visible. */
+[data-motion] .decor span:nth-child(1){animation:drift1 22s ease-in-out infinite}
+[data-motion] .decor span:nth-child(2){animation:drift2 26s ease-in-out infinite}
+[data-motion] .decor span:nth-child(3){animation:drift1 30s ease-in-out infinite reverse}
+@keyframes drift1{50%{transform:translate(40px,30px) scale(1.08)}}
+@keyframes drift2{50%{transform:translate(-30px,-40px) scale(.94)}}
+[data-motion].js .sec .wrap>*,[data-motion].js .strip__item{opacity:0;transform:translateY(14px);transition:opacity .7s ease,transform .7s ease}
+[data-motion].js .is-in .wrap>*,[data-motion].js .is-in .strip__item{opacity:1;transform:none}
+[data-type].typing::after{content:"";display:inline-block;width:1px;height:1em;margin-left:2px;background:currentColor;vertical-align:-2px;animation:caret 1s steps(1) infinite}
+@keyframes caret{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){[data-motion] .decor span{animation:none}[data-motion].js .sec .wrap>*,[data-motion].js .strip__item{opacity:1;transform:none;transition:none}}
+/* light versions of the parts that were dark-only in v2 */
+.strip.tone--light,.strip.tone--white{background:var(--surface);color:var(--ink);border-block:1px solid color-mix(in srgb,var(--accent) 12%,transparent)}
+.strip.tone--white{background:#fff}
+.strip.tone--light .strip__item,.strip.tone--white .strip__item{border-left-color:color-mix(in srgb,var(--accent) 20%,transparent)}
+.strip.tone--light .strip__item strong,.strip.tone--white .strip__item strong{color:var(--ink);font-weight:600}
+.strip.tone--light .strip__item span,.strip.tone--white .strip__item span{color:var(--accent)}
+.tone--light .gp__card,.tone--white .gp__card{background:#fff;border-color:color-mix(in srgb,var(--accent) 16%,transparent);border-radius:14px}
+.tone--light .gp__card h3,.tone--white .gp__card h3{color:var(--ink)}
+.tone--light .gp__card .eyebrow,.tone--white .gp__card .eyebrow,.tone--light .gp__role,.tone--white .gp__role{color:var(--accent)!important}
+.tone--light .sec__outro,.tone--white .sec__outro{color:var(--muted)}
+.contact-plain.tone--light .contact-plain__email a,.contact-plain.tone--white .contact-plain__email a{color:var(--accent);font-weight:600}
+.contact-plain.tone--light .field input,.contact-plain.tone--light .field textarea,.contact-plain.tone--white .field input,.contact-plain.tone--white .field textarea{border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);background:#fff}
+.quote.tone--light .quote__text{color:var(--ink)}
+.quote.tone--light{border-top:1px solid color-mix(in srgb,var(--accent) 12%,transparent)}
+.quote.tone--light .quote__text em,.quote__text strong{color:var(--accent)}
+.textsec.tone--light .stat,.textsec.tone--white .stat{background:#fff}
+.tone--white .stats{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.tone--white .stat strong,.tone--light .stat strong{color:var(--accent)}
+.tone--white .stat span{color:var(--muted)}

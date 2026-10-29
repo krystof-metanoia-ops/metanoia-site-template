@@ -62,3 +62,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+// Motion (opt-in via theme.motion → <body data-motion>; 2026-10-29). Sections fade up once as they enter
+// the viewport, and an eyebrow marked data-type types itself once. Respects reduced-motion; the "js" class
+// is added here, so without JavaScript nothing is ever hidden.
+document.addEventListener("DOMContentLoaded", () => {
+  const body = document.body;
+  if (!body.hasAttribute("data-motion") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  body.classList.add("js");
+  const io = new IntersectionObserver((entries) => entries.forEach((e) => {
+    if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
+  }), { threshold: 0, rootMargin: "0px 0px -8% 0px" });
+  document.querySelectorAll(".sec, .strip").forEach((el) => io.observe(el));
+  document.querySelectorAll("[data-type]").forEach((el) => {
+    const text = el.dataset.type; let i = 0;
+    el.textContent = ""; el.classList.add("typing");
+    const tick = () => { el.textContent = text.slice(0, ++i); if (i < text.length) setTimeout(tick, 55); else setTimeout(() => el.classList.remove("typing"), 1200); };
+    setTimeout(tick, 400);
+  });
+});
