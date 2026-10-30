@@ -61,7 +61,7 @@ const btns = (...bs) => bs.filter(Boolean).map((b, i) => `<a class="btn${i ? " b
 const R = {
   hero: (s) => s.layout === "split" ? `
 <section class="hero-split${tone(s)}" id="${esc(s.id)}">
-  ${s.decor ? `<div class="decor" aria-hidden="true"><span></span><span></span><span></span></div>` : ""}
+  ${s.decor ? `<div class="decor" aria-hidden="true"><span></span><span></span><span></span><span></span></div>` : ""}
   <div class="hero-split__text">
     ${s.eyebrow ? `<p class="hero-split__eyebrow"${s.type_eyebrow ? ` data-type="${esc(s.eyebrow)}"` : ""}>${esc(s.eyebrow)}</p>` : ""}
     <h1>${head(s.heading)}</h1>

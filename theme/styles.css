@@ -575,3 +575,22 @@ html:has(body[data-signature]){overflow-x:clip}
 /* the orb paints behind all page content (negative z-index in the root stacking context) */
 .orb{z-index:-1}
 [data-signature] main>section{z-index:auto}
+
+/* Hero dots, airy skin (30 Oct 2026, Krystof + Maria's call): the circles echo the lens in the Kidron logo.
+   Same slow speed as before, but they wander a larger area (lava-lamp, not bouncing), and a fourth dot
+   joins. Hero only; nothing moves with the scroll. The 4th span has no size outside this skin, so other
+   skins look as before. Static under reduced motion. */
+.skin-airy .decor span:nth-child(4){width:64px;height:64px;left:34%;top:58%;background:var(--accent);opacity:.85}
+[data-motion].skin-airy .decor span:nth-child(1){animation:lava1 34s ease-in-out infinite}
+[data-motion].skin-airy .decor span:nth-child(2){animation:lava2 40s ease-in-out infinite}
+[data-motion].skin-airy .decor span:nth-child(3){animation:lava3 46s ease-in-out infinite}
+[data-motion].skin-airy .decor span:nth-child(4){animation:lava2 38s ease-in-out infinite reverse}
+@keyframes lava1{25%{transform:translate(-120px,60px) scale(1.06)}50%{transform:translate(-40px,150px) scale(.94)}75%{transform:translate(90px,70px) scale(1.04)}}
+@keyframes lava2{25%{transform:translate(140px,-50px) scale(.95)}50%{transform:translate(220px,-120px) scale(1.08)}75%{transform:translate(80px,-160px) scale(.97)}}
+@keyframes lava3{33%{transform:translate(120px,80px) scale(1.05)}66%{transform:translate(40px,160px) scale(.96)}}
+@media (max-width:820px){.skin-airy .decor span:nth-child(4){width:40px;height:40px;left:70%;top:40%}
+  @keyframes lava1{50%{transform:translate(-50px,60px)}}
+  @keyframes lava2{50%{transform:translate(60px,-50px)}}}
+@media (prefers-reduced-motion:reduce){[data-motion].skin-airy .decor span{animation:none}}
+/* one arrow, not two: the link label already carries "↗" */
+.skin-airy .pcard__foot a::after{content:none}
