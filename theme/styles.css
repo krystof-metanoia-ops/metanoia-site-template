@@ -594,3 +594,41 @@ html:has(body[data-signature]){overflow-x:clip}
 @media (prefers-reduced-motion:reduce){[data-motion].skin-airy .decor span{animation:none}}
 /* one arrow, not two: the link label already carries "↗" */
 .skin-airy .pcard__foot a::after{content:none}
+
+/* Hero dots, airy skin (3 Nov 2026, Maria's v9 feedback): scripts.js now drives them, so they stay clear of
+   the text at every width (reason at the code). This replaces the lava keyframes above for this skin. Dots
+   are hidden until the script runs, so a browser without JavaScript shows none rather than one over the
+   headline. The photo sits above the layer, so a dot can slide half behind its top edge. */
+.skin-airy .hero-split>.decor span{visibility:hidden;left:0!important;right:auto!important;top:0!important;bottom:auto!important;animation:none!important;will-change:transform}
+.skin-airy .hero-split>.decor span:nth-child(1){width:clamp(44px,8vw,110px);height:clamp(44px,8vw,110px)}
+.skin-airy .hero-split>.decor span:nth-child(2){width:clamp(26px,3.4vw,46px);height:clamp(26px,3.4vw,46px)}
+.skin-airy .hero-split>.decor span:nth-child(3){width:clamp(96px,18vw,260px);height:clamp(96px,18vw,260px)}
+.skin-airy .hero-split>.decor span:nth-child(4){width:clamp(30px,4.6vw,64px);height:clamp(30px,4.6vw,64px)}
+.skin-airy .hero-split__text,.skin-airy .hero-split__media{position:relative;z-index:1}
+
+/* Partner cards, airy skin (3 Nov 2026, Maria's v9 feedback: "enlarge partner portraits and tighten the
+   photograph/name/biography grouping, particularly on narrow screens"). The rule between name and biography
+   is gone, and the spacing inside a person's block is now smaller than the spacing between the two people,
+   so each portrait, name and biography read as one thing. */
+.skin-airy .gp__grid{gap:clamp(2.5rem,5vw,4.5rem);margin-top:3rem}
+.skin-airy .gp__card{background:none!important}
+.skin-airy .gp__card:hover{transform:none}
+.skin-airy .gp__top{gap:1.5rem;padding:0 0 1.1rem;border-bottom:0}
+.skin-airy .gp__photo{width:clamp(150px,15vw,190px);height:clamp(150px,15vw,190px);border:0}
+.skin-airy .gp__card .eyebrow{margin-bottom:.35rem}
+.skin-airy .gp__card h3{margin-bottom:.2rem}
+.skin-airy .gp__bio{padding:0}
+@media (max-width:600px){
+  .skin-airy .gp__top{flex-direction:column;align-items:flex-start;gap:1rem;padding:0 0 .9rem}
+  /* A phone is the narrow case Maria named: the portrait becomes the largest thing in the block. */
+  .skin-airy .gp__photo{width:min(68vw,260px);height:min(68vw,260px)}
+}
+
+/* Section treatments, airy skin (3 Nov 2026, Maria's v9 feedback: "differentiate portfolio, investment
+   principles and partner sections through subtle spacing, borders or background treatments"; same palette).
+   All three used one pale grey card. Now: portfolio = white cards with a hairline frame; principles = a soft
+   tinted band with no card fill, only a rule above each item; partners = white, opened by a rule, no cards. */
+.skin-airy .pgrid .pcard{background:#fff!important;border:1px solid color-mix(in srgb,var(--ink) 12%,transparent)!important}
+.skin-airy .sec.tiles,.skin-airy .textsec:has(.aside-card){background:color-mix(in srgb,var(--accent) 4%,#fff)}
+.skin-airy .tiles .tile,.skin-airy .textsec .aside-card{background:none!important;padding-left:0;padding-right:1rem;border-top:1px solid color-mix(in srgb,var(--accent) 45%,transparent)!important}
+.skin-airy .sec.gp>.wrap{border-top:1px solid color-mix(in srgb,var(--ink) 14%,transparent);padding-top:clamp(2.5rem,5vw,4rem)}

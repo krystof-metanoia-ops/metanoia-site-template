@@ -149,3 +149,108 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   requestAnimationFrame(frame);
 });
+
+// Hero dots, airy skin (3 Nov 2026, Maria's v9 feedback: "keep the circles clear of headlines, text and
+// buttons at every screen width"). The old CSS keyframes moved each dot by fixed pixels, so at some widths
+// a dot had to cross the text, and no keyframe can know where the text wraps. So the path is computed here:
+// each dot drifts on a slow curve (lava-lamp, not bouncing: Krystof, 30 Oct) and a step that would bring it
+// within CLEAR px of a text line or button is never taken; it turns instead. Clearance holds by construction.
+// Without JavaScript the dots stay hidden (see CSS), so a page without this code can't show an overlap.
+// Static under reduced motion. Hero only; the loop stops while the hero is off screen.
+document.addEventListener("DOMContentLoaded", () => {
+  const decor = document.querySelector(".skin-airy .hero-split > .decor");
+  if (!decor) return;
+  const hero = decor.parentElement;
+  const textBox = hero.querySelector(".hero-split__text");
+  const photo = hero.querySelector(".hero-split__media img");
+  const moving = document.body.hasAttribute("data-motion") && !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const CLEAR = 16;   // px between a dot's edge and any text or button
+  const SPEED = 13;   // px per second: the speed of the old keyframes (about 130 px in 8.5 s, 30 Oct)
+  const LOOK = 44;    // px ahead at which a dot starts to curve away, so it rarely has to stop and turn
+  let obstacles = [], W = 0, H = 0;
+
+  // Line-tight boxes for the headline and paragraphs, so the free space after a short last line counts.
+  // The eyebrow gets its whole block: it types itself in, so its text box grows after we measure.
+  const measure = () => {
+    const o = hero.getBoundingClientRect();
+    const box = (r) => ({ l: r.left - o.left, t: r.top - o.top, r: r.right - o.left, b: r.bottom - o.top });
+    const list = [];
+    [...textBox.children].forEach((el) => {
+      if (el.matches("[data-type]")) { list.push(box(el.getBoundingClientRect())); return; }
+      if (el.classList.contains("btn-row")) { [...el.children].forEach((b) => list.push(box(b.getBoundingClientRect()))); return; }
+      const range = document.createRange(); range.selectNodeContents(el);
+      [...range.getClientRects()].forEach((r) => { if (r.width && r.height) list.push(box(r)); });
+    });
+    obstacles = list; W = o.width;
+    // Dots may slide halfway behind the top of the photo (it sits above them), never lower: a dot fully
+    // behind the photo would just be missing from the page.
+    H = photo ? photo.getBoundingClientRect().top - o.top : o.height;
+  };
+  const hits = (x, y, r) => obstacles.some((b) => {
+    const dx = x - Math.max(b.l, Math.min(x, b.r)), dy = y - Math.max(b.t, Math.min(y, b.b));
+    return dx * dx + dy * dy < (r + CLEAR) * (r + CLEAR);
+  });
+  // A dot may hang half off the edge of the hero (the decor layer clips it), which is what gives a phone,
+  // whose text runs almost edge to edge, enough room.
+  const out = (x, y, r) => x < -r / 2 || x > W + r / 2 || y < -r / 2 || y > H;
+  const free = (x, y, r) => !out(x, y, r) && !hits(x, y, r);
+
+  const dots = [...decor.children].map((el, i) => ({ el, i, x: 0, y: 0, r: 0, a: i * 2.1 + 0.6, ok: false }));
+  // Find a free spot away from the dots already placed, so they start spread out. A spot where the whole
+  // dot shows beats one clipped by the edge: otherwise "as far apart as possible" sends them all to the corners.
+  const place = (d, placed) => {
+    let best = null, bestScore = -1;
+    for (let y = -d.r / 2; y <= H; y += 12) for (let x = -d.r / 2; x <= W + d.r / 2; x += 12) {
+      if (hits(x, y, d.r)) continue;
+      const apart = placed.length ? Math.min(300, ...placed.map((p) => Math.hypot(p.x - x, p.y - y))) : x / 10;
+      const whole = x > d.r && x < W - d.r && y > d.r && y < H - d.r;
+      const score = apart + (whole ? 300 : 0);
+      if (score > bestScore) { bestScore = score; best = [x, y]; }
+    }
+    // No free spot at this width: the dot stays hidden rather than touch the text.
+    d.ok = Boolean(best);
+    if (best) [d.x, d.y] = best;
+    d.el.style.visibility = d.ok ? "visible" : "hidden";
+  };
+  const draw = (d) => { d.el.style.transform = `translate3d(${d.x - d.r}px,${d.y - d.r}px,0)`; };
+  const layout = (first) => {
+    measure();
+    const placed = [];
+    dots.forEach((d) => {
+      d.r = d.el.offsetWidth / 2;
+      // On a resize a dot keeps its place unless the new text wrap reached it.
+      if (first || !d.ok || !free(d.x, d.y, d.r)) place(d, placed);
+      if (d.ok) { placed.push(d); draw(d); }
+    });
+  };
+
+  decor.classList.add("is-live");
+  layout(true);
+  new ResizeObserver(() => layout(false)).observe(hero);
+  // Web fonts change where the text wraps.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => layout(false));
+  if (!moving) return;
+
+  let last = 0, on = false, measured = 0;
+  const step = (now) => {
+    if (!on) return;
+    const dt = Math.min((now - last) / 1000, 0.1); last = now;
+    // Measure again once a second. The test on 3 Nov found a dot 6 px from the eyebrow: the text had moved
+    // (the eyebrow types itself in, a late web font rewraps) without a fresh measurement. The two hooks above
+    // aren't enough on their own. A few rectangles a second cost nothing against that.
+    if (now - measured > 1000) { measured = now; layout(false); }
+    dots.forEach((d) => {
+      if (!d.ok) return;
+      d.a += Math.sin(now / 5200 + d.i * 1.7) * 0.25 * dt; // the slow wander
+      const cos = Math.cos(d.a), sin = Math.sin(d.a);
+      if (!free(d.x + cos * LOOK, d.y + sin * LOOK, d.r)) d.a += 0.7 * dt;
+      const nx = d.x + cos * SPEED * dt, ny = d.y + sin * SPEED * dt;
+      if (free(nx, ny, d.r)) { d.x = nx; d.y = ny; draw(d); } else d.a += 1.2 * dt;
+    });
+    requestAnimationFrame(step);
+  };
+  new IntersectionObserver(([e]) => {
+    if (e.isIntersecting && !on) { on = true; last = performance.now(); requestAnimationFrame(step); }
+    else if (!e.isIntersecting) on = false;
+  }).observe(hero);
+});
