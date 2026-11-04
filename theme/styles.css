@@ -690,3 +690,21 @@ html:has(body[data-signature]){overflow-x:clip}
 .skin-airy .tiles .tile__num{grid-row:1/4;font-size:clamp(2rem,3.4vw,2.8rem)}
 .skin-airy .tiles .tile>*:not(.tile__num){grid-column:2}
 @media (max-width:900px){.skin-airy .textsec__grid{gap:1.75rem}}
+
+
+/* Quiet (4 Nov 2026), opt-in: theme.skin gains "quiet". Rebuilt from the description in the log of Maria's
+   ChatGPT ("Quiet section rules", her choice on 4 Nov): no large or floating circles, fine section and item
+   rules with small stationary pink markers, smaller headings and spacing, photographs in colour. Her own CSS
+   sits on her Mac, so this is a reconstruction, not her file: compare before adopting it. */
+.skin-quiet .hero-split>.decor,.skin-quiet .bubbles{display:none}
+.skin-quiet .hero-split__media img,.skin-quiet .gp__photo{filter:none}
+.skin-quiet .sec{padding:clamp(3.5rem,7vw,5.5rem) 0}
+.skin-quiet .sec>.wrap{border-top:1px solid color-mix(in srgb,var(--ink) 14%,transparent);padding-top:clamp(2rem,4vw,3rem)}
+.skin-quiet .sec.gp>.wrap{padding-top:clamp(2rem,4vw,3rem)}
+.skin-quiet .sec h2,.skin-quiet .textsec h2,.skin-quiet .sec.tiles h2,.skin-quiet .sec.gp h2{font-size:clamp(2rem,3.6vw,3.2rem);line-height:1.08}
+.skin-quiet .contact-plain h2{font-size:clamp(2rem,3.6vw,3.2rem)}
+.skin-quiet .pcard,.skin-quiet .pgrid .pcard,.skin-quiet .aside-card,.skin-quiet .tiles .tile{background:none!important;border:0!important;border-top:1px solid color-mix(in srgb,var(--ink) 14%,transparent)!important;padding-left:0;padding-right:0;box-shadow:none!important}
+.skin-quiet .pcard:hover,.skin-quiet .tile:hover,.skin-quiet .aside-card:hover{transform:none;box-shadow:none}
+.skin-quiet .pcard h3,.skin-quiet .aside-card h3,.skin-quiet .tiles .tile h3{position:relative;padding-left:.95rem}
+.skin-quiet .pcard h3::before,.skin-quiet .aside-card h3::before,.skin-quiet .tiles .tile h3::before{content:"";position:absolute;left:0;top:.62em;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.skin-quiet .tiles__grid{gap:0 2.5rem!important}
