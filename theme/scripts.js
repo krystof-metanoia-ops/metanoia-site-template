@@ -190,21 +190,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const dx = x - Math.max(b.l, Math.min(x, b.r)), dy = y - Math.max(b.t, Math.min(y, b.b));
     return dx * dx + dy * dy < (r + CLEAR) * (r + CLEAR);
   });
-  // A dot may hang half off the edge of the hero (the decor layer clips it), which is what gives a phone,
-  // whose text runs almost edge to edge, enough room.
-  const out = (x, y, r) => x < -r / 2 || x > W + r / 2 || y < -r / 2 || y > H;
+  // Krystof, 4 Nov: "I don't like circles that are cut off". So on a desktop the whole dot stays on the page,
+  // and only a phone may let a dot hang half off the side. The pale dot never slides behind the photo: a pale
+  // circle with a flat edge reads as a bug, while a dark one reads as depth (his two screenshots).
+  const out = (x, y, r) => {
+    const side = W > 820 ? r : r * 0.5;
+    const floor = r > 40 ? H - r : H;
+    return x < side || x > W - side || y < r || y > floor;
+  };
   const free = (x, y, r) => !out(x, y, r) && !hits(x, y, r);
 
   const dots = [...decor.children].map((el, i) => ({ el, i, x: 0, y: 0, r: 0, a: i * 2.1 + 0.6, ok: false }));
-  // Find a free spot away from the dots already placed, so they start spread out. A spot where the whole
-  // dot shows beats one clipped by the edge: otherwise "as far apart as possible" sends them all to the corners.
+  // Find a free spot away from the dots already placed, so they start spread out.
   const place = (d, placed) => {
     let best = null, bestScore = -1;
-    for (let y = -d.r / 2; y <= H; y += 12) for (let x = -d.r / 2; x <= W + d.r / 2; x += 12) {
-      if (hits(x, y, d.r)) continue;
+    for (let y = d.r; y <= H; y += 12) for (let x = 0; x <= W; x += 12) {
+      if (!free(x, y, d.r)) continue;
       const apart = placed.length ? Math.min(300, ...placed.map((p) => Math.hypot(p.x - x, p.y - y))) : x / 10;
-      const whole = x > d.r && x < W - d.r && y > d.r && y < H - d.r;
-      const score = apart + (whole ? 300 : 0);
+      const score = apart;
       if (score > bestScore) { bestScore = score; best = [x, y]; }
     }
     // No free spot at this width: the dot stays hidden rather than touch the text.
@@ -253,4 +256,59 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.isIntersecting && !on) { on = true; last = performance.now(); requestAnimationFrame(step); }
     else if (!e.isIntersecting) on = false;
   }).observe(hero);
+});
+
+// Depth layers, airy skin (4 Nov 2026, Krystof: "do the bubbles in parallax, as another layer, even two layers
+// that move at different speeds than the front layer with all the text"). Two fixed layers of circles sit
+// between the section backgrounds and the content, so no section edge can cut a circle: that flat cut was the
+// complaint. The far layer is pale, large and slow; the near one is darker, smaller and faster. Text stays on
+// top, and both colours are light enough to read text across them (see CSS). They stay hidden while the hero
+// text is on screen, because the hero has its own dots with their own clearance. Static under reduced motion.
+// Scroll only moves two transforms, once per frame.
+document.addEventListener("DOMContentLoaded", () => {
+  const hero = document.querySelector(".skin-airy .hero-split");
+  if (!hero) return;
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Share of the scroll speed: the text moves at 1. At 1 the layer is fixed to the page, so reduced motion
+  // uses the same placement code with no movement relative to the text.
+  const FAR = still ? 1 : 0.22, NEAR = still ? 1 : 0.55;
+  const box = document.createElement("div"); box.className = "bubbles"; box.setAttribute("aria-hidden", "true");
+  const far = document.createElement("div"), near = document.createElement("div");
+  far.className = "bubbles__layer bubbles__layer--far"; near.className = "bubbles__layer bubbles__layer--near";
+  box.append(far, near); document.body.prepend(box);
+
+  const anchors = [...document.querySelectorAll("main > .sec")].filter((s) => !s.classList.contains("hero-split"));
+  // Fractions of the free width and the viewport height: the whole circle is on screen when its section is
+  // centred.
+  const place = () => {
+    const vw = innerWidth, vh = innerHeight;
+    far.textContent = ""; near.textContent = "";
+    anchors.forEach((sec, i) => {
+      const r = sec.getBoundingClientRect(), mid = r.top + scrollY + r.height / 2;
+      const add = (layer, k, size, fx, fy) => {
+        const b = document.createElement("span");
+        b.style.cssText = `width:${size}px;height:${size}px;left:${(vw - size) * fx}px;top:${fy * vh + (mid - vh / 2) * k - size / 2}px`;
+        layer.append(b);
+      };
+      // Far and near take turns: one circle of each per section looked busy on the first draft (4 Nov), since
+      // a slow layer packs its circles closer together on screen than the sections they belong to.
+      const left = i % 4 < 2;
+      if (i % 2 === 0) add(far, FAR, Math.min(vw * 0.62, 420), left ? 0.05 : 0.95, 0.45);
+      else add(near, NEAR, Math.min(vw * 0.3, 180), left ? 0.97 : 0.03, 0.62);
+    });
+  };
+  let ticking = false;
+  const move = () => {
+    ticking = false;
+    const s = scrollY;
+    far.style.transform = `translate3d(0,${-s * FAR}px,0)`;
+    near.style.transform = `translate3d(0,${-s * NEAR}px,0)`;
+    const textEnd = hero.querySelector(".hero-split__text").getBoundingClientRect().bottom;
+    box.style.opacity = Math.min(1, Math.max(0, (80 - textEnd) / 160));
+  };
+  const queue = () => { if (!ticking) { ticking = true; requestAnimationFrame(move); } };
+  place(); move();
+  addEventListener("scroll", queue, { passive: true });
+  // Section heights change with the text wrap, web fonts and late images.
+  new ResizeObserver(() => { place(); queue(); }).observe(document.querySelector("main"));
 });

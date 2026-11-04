@@ -629,6 +629,64 @@ html:has(body[data-signature]){overflow-x:clip}
    All three used one pale grey card. Now: portfolio = white cards with a hairline frame; principles = a soft
    tinted band with no card fill, only a rule above each item; partners = white, opened by a rule, no cards. */
 .skin-airy .pgrid .pcard{background:#fff!important;border:1px solid color-mix(in srgb,var(--ink) 12%,transparent)!important}
-.skin-airy .sec.tiles,.skin-airy .textsec:has(.aside-card){background:color-mix(in srgb,var(--accent) 4%,#fff)}
 .skin-airy .tiles .tile,.skin-airy .textsec .aside-card{background:none!important;padding-left:0;padding-right:1rem;border-top:1px solid color-mix(in srgb,var(--accent) 45%,transparent)!important}
 .skin-airy .sec.gp>.wrap{border-top:1px solid color-mix(in srgb,var(--ink) 14%,transparent);padding-top:clamp(2.5rem,5vw,4rem)}
+
+
+/* Depth and section rhythm, airy skin (4 Nov 2026, Krystof: not sure the sections are distinct enough;
+   alternating white and pink under one big heading "feels a bit too basic"). The sections now differ by
+   scale and composition, not only by colour:
+   - portfolio is the one stage: a dark band in the palette's ink, with the only giant heading on the page
+     (Maria, 30 Oct: the portfolio is "the most important thing in a fund"). Set by tone: "dark" in site.json.
+   - text sections and "where we invest" read as an editorial index: a smaller heading that stays in place
+     on the left while the content scrolls past it on the right.
+   - tinted bands (tone: "light") end in a soft arc that echoes the lens in the Kidron logo, in place of a
+     ruled straight edge.
+   Bubbles: see scripts.js. They replace the per-section circles, which the section edge cut flat. */
+.skin-airy .sec::before{display:none}
+.skin-airy .sec{overflow:visible}
+.bubbles{position:fixed;inset:0;z-index:1;overflow:hidden;pointer-events:none;opacity:0}
+.bubbles__layer{position:absolute;left:0;right:0;top:0;will-change:transform}
+.bubbles span{position:absolute;display:block;border-radius:50%}
+/* Alpha, not a fixed pink, so the same circle works on white, on the tint and on the dark band. Near layer at
+   28%: body text keeps better than 4.5:1 across it (ink 8:1, muted 5:1 on white, measured by hand 4 Nov). */
+.bubbles__layer--far span{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.bubbles__layer--near span{background:color-mix(in srgb,var(--accent) 28%,transparent)}
+/* Content above the bubbles; section backgrounds below them. A section must not start its own stacking
+   context, or its background would rise over the bubbles again. */
+.skin-airy main>section>.wrap,.skin-airy .quote>*,.skin-airy .notice>*,.skin-airy .hero-split__text,.skin-airy .hero-split__media{position:relative;z-index:2}
+.skin-airy .footer{position:relative;z-index:3}
+
+/* Arc edges. The airy skin set tone "light" to white (line 454), which left it no different from "white". */
+.skin-airy .sec.tone--light{background:color-mix(in srgb,var(--accent) 5%,#fff)}
+.skin-airy .sec.tone--light,.skin-airy .sec.pgrid.tone--dark{border-radius:50% 50% 0 0/clamp(26px,5vw,84px) clamp(26px,5vw,84px) 0 0}
+.skin-airy .sec.tone--light{border-radius:50%/clamp(26px,5vw,84px)}
+.skin-airy .strip.tone--dark{border-radius:0 0 50% 50%/0 0 clamp(26px,5vw,84px) clamp(26px,5vw,84px);padding-bottom:clamp(4rem,8vw,7rem)}
+
+/* Portfolio stage */
+.skin-airy .tone--dark{background:var(--ink)}
+.skin-airy .pgrid.tone--dark{padding-bottom:4rem}
+.skin-airy .pgrid.tone--dark .sec__intro{color:var(--on-dark)}
+.skin-airy .pgrid.tone--dark .eyebrow::before{background:var(--on-dark-label)}
+.skin-airy .pgrid.tone--dark h2,.skin-airy .pgrid.tone--dark h2 em{color:#fff}
+.skin-airy .pgrid.tone--dark .chip{color:var(--on-dark)}
+.skin-airy .pgrid.tone--dark .chip[aria-pressed="true"]{color:#fff}
+.skin-airy .pgrid.tone--dark .chip[aria-pressed="true"]::before{background:var(--on-dark-label)}
+.skin-airy .pgrid.tone--dark .pcard{border:0!important}
+.skin-airy .pgrid.tone--dark .pcard p,.skin-airy .pgrid.tone--dark .pcard h3{color:var(--ink)}
+.skin-airy .strip.tone--dark .strip__title,.skin-airy .strip.tone--dark .strip__item strong{color:#fff}
+.skin-airy .strip.tone--dark .strip__item{border-left-color:rgba(255,255,255,.2)}
+
+/* Editorial index: the smaller, sticky heading */
+.skin-airy .textsec h2,.skin-airy .sec.tiles h2,.skin-airy .sec.gp h2{font-size:clamp(2.4rem,4.6vw,4.2rem);line-height:1.02}
+@media (min-width:901px){
+  .skin-airy .textsec__main{position:sticky;top:110px}
+  .skin-airy .sec.tiles>.wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:4.5rem;align-items:start}
+  .skin-airy .sec.tiles .sec__head{position:sticky;top:110px;margin:0}
+  .skin-airy .sec.tiles .tiles__grid{grid-template-columns:1fr!important;margin:0}
+}
+/* "Where we invest" becomes a numbered list with rules, not three boxes */
+.skin-airy .tiles .tile{display:grid;grid-template-columns:clamp(3.5rem,6vw,5.5rem) minmax(0,1fr);column-gap:1rem;padding:1.75rem 0}
+.skin-airy .tiles .tile__num{grid-row:1/4;font-size:clamp(2rem,3.4vw,2.8rem)}
+.skin-airy .tiles .tile>*:not(.tile__num){grid-column:2}
+@media (max-width:900px){.skin-airy .textsec__grid{gap:1.75rem}}
