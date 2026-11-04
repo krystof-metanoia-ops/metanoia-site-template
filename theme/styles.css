@@ -654,7 +654,7 @@ html:has(body[data-signature]){overflow-x:clip}
 .bubbles__layer--near span{background:color-mix(in srgb,var(--accent) 28%,transparent)}
 /* Content above the bubbles; section backgrounds below them. A section must not start its own stacking
    context, or its background would rise over the bubbles again. */
-.skin-airy main>section>.wrap,.skin-airy .quote>*,.skin-airy .notice>*,.skin-airy .hero-split__text,.skin-airy .hero-split__media{position:relative;z-index:2}
+.skin-airy .sec>.wrap,.skin-airy main>section>.wrap,.skin-airy .quote>*,.skin-airy .notice>*,.skin-airy .hero-split__text,.skin-airy .hero-split__media{position:relative;z-index:2}
 .skin-airy .footer{position:relative;z-index:3}
 
 /* Arc edges. The airy skin set tone "light" to white (line 454), which left it no different from "white". */
