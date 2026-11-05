@@ -713,3 +713,8 @@ html:has(body[data-signature]){overflow-x:clip}
 /* Near layer a little lighter: the depth stays, the page reads calmer. Maria liked the depth ("that's a nice
    effect") and objected to the floating dots only. */
 .bubbles__layer--near span{background:color-mix(in srgb,var(--accent) 22%,transparent)}
+
+/* Hero, 5 Nov: one period-sized dot in the headline's colour and the big pale circle. See scripts.js. The other
+   two spans are unused here, and the 3 Nov rule still hides both dots until the script runs. */
+.skin-airy .hero-split>.decor span:nth-child(2),.skin-airy .hero-split>.decor span:nth-child(4){display:none}
+.skin-airy .hero-split>.decor span:nth-child(1){background:var(--accent)}

@@ -150,29 +150,35 @@ document.addEventListener("DOMContentLoaded", () => {
   requestAnimationFrame(frame);
 });
 
-// Hero dots, airy skin. Fixed in place since 5 Nov 2026. Maria on the call: floating dots "might convey a
-// message that it's too playful" for LPs, who are mostly "finance people and men"; "no floating dots, just
-// simple". Krystof: "fixed dots in the header section". (Before that they drifted: 30 Oct to 4 Nov.)
-// They still have to stay clear of the text at every width (Maria, 3 Nov), and no CSS position can know
-// where the text wraps, so the script measures the text and puts each dot on the free spot nearest its place
-// in the composition. A dot with no free spot at that width stays hidden rather than touch the text.
-// Without JavaScript the dots stay hidden (see CSS), so a page without this code can't show an overlap.
+// Hero dots, airy skin (Krystof, 5 Nov 2026, after Maria didn't love the fixed group: "one small dot in the same
+// colour as the women's health bolding where a period would be in the headline, but then on scroll have it move
+// as the parallax and disappear behind the hero photo below. And keep that lighter big circle there as well, but
+// also make it a part of the parallax layer"). (Before that: drifting 30 Oct to 4 Nov, a fixed group this morning.)
+// A layer that moves slower than the page slides down the page as you scroll, so the photo rises over both.
+// The big circle starts clear of the text (Maria, 3 Nov), found by measuring where the text wraps; with no free
+// spot at that width it stays hidden. Without JavaScript both stay hidden (see CSS). Static under reduced motion.
 document.addEventListener("DOMContentLoaded", () => {
   const decor = document.querySelector(".skin-airy .hero-split > .decor");
   if (!decor) return;
   const hero = decor.parentElement;
+  const h1 = hero.querySelector("h1");
   const textBox = hero.querySelector(".hero-split__text");
   const photo = hero.querySelector(".hero-split__media img");
-  const CLEAR = 16;   // px between a dot's edge and any text or button
-  // Where each span wants to be, as a share of the free area above the photo. They form one group on the
-  // right, around the large pale circle, like the lens in the Kidron logo. Order follows the CSS sizes:
-  // medium solid, small solid, large pale, small-medium solid.
-  const WANT = [[0.885, 0.3], [0.945, 0.74], [0.8, 0.5], [0.7, 0.8]];
-  let obstacles = [], W = 0, H = 0;
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const CLEAR = 16;    // px between the big circle's edge and any text or button
+  // Share of the scroll speed; the text moves at 1. The dot must be well under 1 or the photo would only reach
+  // it up under the sticky header: at 0.3 it goes behind the photo about a third of the way down the screen.
+  const DOT_SPEED = still ? 1 : 0.3, CIRCLE_SPEED = still ? 1 : 0.15;
+  const dot = decor.children[0], circle = decor.children[2];
+  // Zero-size marker at the end of the headline. An inline-block with no size sits on the baseline, so it gives
+  // both where the text ends and where a period would rest, at any width and after any wrap.
+  const mark = document.createElement("span");
+  mark.setAttribute("aria-hidden", "true"); mark.style.cssText = "display:inline-block;width:0;height:0";
+  (h1.querySelector("em:last-child") || h1).append(mark);
+  let dotAt = null, circleAt = null, photoTop = 0, photoBottom = 0;
 
-  // Line-tight boxes for the headline and paragraphs, so the free space after a short last line counts.
-  // The eyebrow gets its whole block: it types itself in, so its text box grows after we measure.
-  const measure = () => {
+  // Line-tight boxes for the headline and paragraphs. The eyebrow gets its whole block: it types itself in.
+  const obstacles = () => {
     const o = hero.getBoundingClientRect();
     const box = (r) => ({ l: r.left - o.left, t: r.top - o.top, r: r.right - o.left, b: r.bottom - o.top });
     const list = [];
@@ -182,38 +188,50 @@ document.addEventListener("DOMContentLoaded", () => {
       const range = document.createRange(); range.selectNodeContents(el);
       [...range.getClientRects()].forEach((r) => { if (r.width && r.height) list.push(box(r)); });
     });
-    obstacles = list; W = o.width;
-    H = photo ? photo.getBoundingClientRect().top - o.top : o.height;
+    return list;
   };
-  const hits = (x, y, r) => obstacles.some((b) => {
-    const dx = x - Math.max(b.l, Math.min(x, b.r)), dy = y - Math.max(b.t, Math.min(y, b.b));
-    return dx * dx + dy * dy < (r + CLEAR) * (r + CLEAR);
-  });
-  // Krystof, 4 Nov: "I don't like circles that are cut off". The whole dot stays on the page at every width,
-  // and nothing slides behind the photo, because a dot with a flat edge reads as a bug. On a narrow phone that
-  // leaves room for fewer dots, which is the better trade.
-  const out = (x, y, r) => x < r + 8 || x > W - r - 8 || y < r + 8 || y > H - r - 8;
-  const dots = [...decor.children].map((el, i) => ({ el, want: WANT[i] || [0.8, 0.5] }));
   const layout = () => {
-    measure();
-    dots.forEach((d) => {
-      const r = d.el.offsetWidth / 2, wx = d.want[0] * W, wy = d.want[1] * H;
-      let best = null, bestDist = Infinity;
-      for (let y = 0; y <= H; y += 8) for (let x = 0; x <= W; x += 8) {
-        if (out(x, y, r) || hits(x, y, r)) continue;
-        const dist = Math.hypot(x - wx, y - wy);
-        if (dist < bestDist) { bestDist = dist; best = [x, y]; }
-      }
-      d.el.style.visibility = best ? "visible" : "hidden";
-      if (best) d.el.style.transform = `translate3d(${best[0] - r}px,${best[1] - r}px,0)`;
-    });
+    const o = hero.getBoundingClientRect(), W = o.width;
+    const p = photo ? photo.getBoundingClientRect() : o;
+    photoTop = p.top - o.top; photoBottom = p.bottom - o.top;
+    // The dot: the size of a full stop in this headline, resting on the baseline after the last letter.
+    const size = parseFloat(getComputedStyle(h1).fontSize) * 0.17, m = mark.getBoundingClientRect();
+    dot.style.width = dot.style.height = `${size}px`;
+    dotAt = { x: m.left - o.left + size * 0.35, y: m.bottom - o.top - size, r: size / 2 };
+    // The big circle: the free spot nearest its place on the right, whole, above the photo.
+    const r = circle.offsetWidth / 2, list = obstacles(), wx = 0.8 * W, wy = 0.5 * photoTop;
+    let best = null, bestDist = Infinity;
+    for (let y = r + 8; y <= photoTop - r - 8; y += 8) for (let x = r + 8; x <= W - r - 8; x += 8) {
+      const hit = list.some((b) => {
+        const dx = x - Math.max(b.l, Math.min(x, b.r)), dy = y - Math.max(b.t, Math.min(y, b.b));
+        return dx * dx + dy * dy < (r + CLEAR) * (r + CLEAR);
+      });
+      const dist = Math.hypot(x - wx, y - wy);
+      if (!hit && dist < bestDist) { bestDist = dist; best = [x, y]; }
+    }
+    circleAt = best && { x: best[0] - r, y: best[1] - r, r };
+    move();
   };
+  // Both are hidden once well behind the photo, so they can't come out below it into the white gap.
+  const move = () => {
+    const s = scrollY;
+    const dy = dotAt.y + s * (1 - DOT_SPEED);
+    dot.style.visibility = dy < photoTop + 40 ? "visible" : "hidden";
+    dot.style.transform = `translate3d(${dotAt.x}px,${dy}px,0)`;
+    if (!circleAt) { circle.style.visibility = "hidden"; return; }
+    const cy = circleAt.y + s * (1 - CIRCLE_SPEED);
+    circle.style.visibility = cy + circleAt.r * 2 < photoBottom ? "visible" : "hidden";
+    circle.style.transform = `translate3d(${circleAt.x}px,${cy}px,0)`;
+  };
+  let ticking = false;
+  addEventListener("scroll", () => {
+    if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; move(); }); }
+  }, { passive: true });
   decor.classList.add("is-live");
   layout();
   new ResizeObserver(layout).observe(hero);
-  // Web fonts change where the text wraps.
   // fonts.ready can resolve before the font has started loading, and a late font moves the lines without
-  // changing the hero's size. A test on 5 Nov found 13 px where 16 was meant, hence the three extra hooks.
+  // changing the hero's size. A test on 5 Nov found 13 px where 16 was meant, hence the extra hooks.
   if (document.fonts) { document.fonts.ready.then(layout); document.fonts.addEventListener("loadingdone", layout); }
   addEventListener("load", layout);
   setTimeout(layout, 1500);
