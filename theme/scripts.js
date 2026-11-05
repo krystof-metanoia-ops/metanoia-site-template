@@ -212,8 +212,11 @@ document.addEventListener("DOMContentLoaded", () => {
   layout();
   new ResizeObserver(layout).observe(hero);
   // Web fonts change where the text wraps.
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+  // fonts.ready can resolve before the font has started loading, and a late font moves the lines without
+  // changing the hero's size. A test on 5 Nov found 13 px where 16 was meant, hence the three extra hooks.
+  if (document.fonts) { document.fonts.ready.then(layout); document.fonts.addEventListener("loadingdone", layout); }
   addEventListener("load", layout);
+  setTimeout(layout, 1500);
 });
 
 // Depth layers, airy skin (4 Nov 2026, Krystof: "do the bubbles in parallax, as another layer, even two layers
