@@ -595,17 +595,6 @@ html:has(body[data-signature]){overflow-x:clip}
 /* one arrow, not two: the link label already carries "↗" */
 .skin-airy .pcard__foot a::after{content:none}
 
-/* Hero dots, airy skin (3 Nov 2026, Maria's v9 feedback): scripts.js now drives them, so they stay clear of
-   the text at every width (reason at the code). This replaces the lava keyframes above for this skin. Dots
-   are hidden until the script runs, so a browser without JavaScript shows none rather than one over the
-   headline. The photo sits above the layer, so a dot can slide half behind its top edge. */
-.skin-airy .hero-split>.decor span{visibility:hidden;left:0!important;right:auto!important;top:0!important;bottom:auto!important;animation:none!important;will-change:transform}
-.skin-airy .hero-split>.decor span:nth-child(1){width:clamp(44px,8vw,110px);height:clamp(44px,8vw,110px)}
-.skin-airy .hero-split>.decor span:nth-child(2){width:clamp(26px,3.4vw,46px);height:clamp(26px,3.4vw,46px)}
-.skin-airy .hero-split>.decor span:nth-child(3){width:clamp(96px,18vw,260px);height:clamp(96px,18vw,260px)}
-.skin-airy .hero-split>.decor span:nth-child(4){width:clamp(30px,4.6vw,64px);height:clamp(30px,4.6vw,64px)}
-.skin-airy .hero-split__text,.skin-airy .hero-split__media{position:relative;z-index:1}
-
 /* Partner cards, airy skin (3 Nov 2026, Maria's v9 feedback: "enlarge partner portraits and tighten the
    photograph/name/biography grouping, particularly on narrow screens"). The rule between name and biography
    is gone, and the spacing inside a person's block is now smaller than the spacing between the two people,
@@ -714,7 +703,7 @@ html:has(body[data-signature]){overflow-x:clip}
    effect") and objected to the floating dots only. */
 .bubbles__layer--near span{background:color-mix(in srgb,var(--accent) 22%,transparent)}
 
-/* Hero, 5 Nov: one period-sized dot in the headline's colour and the big pale circle. See scripts.js. The other
-   two spans are unused here, and the 3 Nov rule still hides both dots until the script runs. */
-.skin-airy .hero-split>.decor span:nth-child(2),.skin-airy .hero-split>.decor span:nth-child(4){display:none}
-.skin-airy .hero-split>.decor span:nth-child(1){background:var(--accent)}
+/* Headline dot (scripts.js). The template's hero circles are off in this skin: 5 Nov, Krystof and Maria. The size
+   and gap are those of a full stop in this typeface. */
+.skin-airy .hero-split>.decor{display:none}
+.hero-period{display:inline-block;width:.17em;height:.17em;margin-left:.06em;border-radius:50%;background:var(--accent);transform-origin:50% 50%;will-change:transform}

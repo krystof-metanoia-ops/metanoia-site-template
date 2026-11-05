@@ -150,91 +150,32 @@ document.addEventListener("DOMContentLoaded", () => {
   requestAnimationFrame(frame);
 });
 
-// Hero dots, airy skin (Krystof, 5 Nov 2026, after Maria didn't love the fixed group: "one small dot in the same
-// colour as the women's health bolding where a period would be in the headline, but then on scroll have it move
-// as the parallax and disappear behind the hero photo below. And keep that lighter big circle there as well, but
-// also make it a part of the parallax layer"). (Before that: drifting 30 Oct to 4 Nov, a fixed group this morning.)
-// A layer that moves slower than the page slides down the page as you scroll, so the photo rises over both.
-// The big circle starts clear of the text (Maria, 3 Nov), found by measuring where the text wraps; with no free
-// spot at that width it stays hidden. Without JavaScript both stay hidden (see CSS). Static under reduced motion.
+// Headline dot, airy skin (Krystof, 5 Nov 2026: get rid of the big circle; "the small pink dot, fix it in place
+// relative to the heading, but make it shrink on scroll, until it disappears completely when the heading scrolls
+// out of view"). It is an inline element at the end of the headline, sized like a full stop, so it sits and wraps
+// as a period does at every width. Scroll changes only its scale: full size at the top of the page, zero when the
+// heading's last line reaches the sticky header. Stays full size under reduced motion. No dot without JavaScript.
+// This replaces the moving hero dots of 30 Oct to 5 Nov, which Maria found too playful for LPs.
 document.addEventListener("DOMContentLoaded", () => {
-  const decor = document.querySelector(".skin-airy .hero-split > .decor");
-  if (!decor) return;
-  const hero = decor.parentElement;
-  const h1 = hero.querySelector("h1");
-  const textBox = hero.querySelector(".hero-split__text");
-  const photo = hero.querySelector(".hero-split__media img");
-  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const CLEAR = 16;    // px between the big circle's edge and any text or button
-  // Share of the scroll speed; the text moves at 1. The dot must be well under 1 or the photo would only reach
-  // it up under the sticky header: at 0.3 it goes behind the photo about a third of the way down the screen.
-  const DOT_SPEED = still ? 1 : 0.3, CIRCLE_SPEED = still ? 1 : 0.15;
-  const dot = decor.children[0], circle = decor.children[2];
-  // Zero-size marker at the end of the headline. An inline-block with no size sits on the baseline, so it gives
-  // both where the text ends and where a period would rest, at any width and after any wrap.
-  const mark = document.createElement("span");
-  mark.setAttribute("aria-hidden", "true"); mark.style.cssText = "display:inline-block;width:0;height:0";
-  (h1.querySelector("em:last-child") || h1).append(mark);
-  let dotAt = null, circleAt = null, photoTop = 0, photoBottom = 0;
-
-  // Line-tight boxes for the headline and paragraphs. The eyebrow gets its whole block: it types itself in.
-  const obstacles = () => {
-    const o = hero.getBoundingClientRect();
-    const box = (r) => ({ l: r.left - o.left, t: r.top - o.top, r: r.right - o.left, b: r.bottom - o.top });
-    const list = [];
-    [...textBox.children].forEach((el) => {
-      if (el.matches("[data-type]")) { list.push(box(el.getBoundingClientRect())); return; }
-      if (el.classList.contains("btn-row")) { [...el.children].forEach((b) => list.push(box(b.getBoundingClientRect()))); return; }
-      const range = document.createRange(); range.selectNodeContents(el);
-      [...range.getClientRects()].forEach((r) => { if (r.width && r.height) list.push(box(r)); });
-    });
-    return list;
-  };
-  const layout = () => {
-    const o = hero.getBoundingClientRect(), W = o.width;
-    const p = photo ? photo.getBoundingClientRect() : o;
-    photoTop = p.top - o.top; photoBottom = p.bottom - o.top;
-    // The dot: the size of a full stop in this headline, resting on the baseline after the last letter.
-    const size = parseFloat(getComputedStyle(h1).fontSize) * 0.17, m = mark.getBoundingClientRect();
-    dot.style.width = dot.style.height = `${size}px`;
-    dotAt = { x: m.left - o.left + size * 0.35, y: m.bottom - o.top - size, r: size / 2 };
-    // The big circle: the free spot nearest its place on the right, whole, above the photo.
-    const r = circle.offsetWidth / 2, list = obstacles(), wx = 0.8 * W, wy = 0.5 * photoTop;
-    let best = null, bestDist = Infinity;
-    for (let y = r + 8; y <= photoTop - r - 8; y += 8) for (let x = r + 8; x <= W - r - 8; x += 8) {
-      const hit = list.some((b) => {
-        const dx = x - Math.max(b.l, Math.min(x, b.r)), dy = y - Math.max(b.t, Math.min(y, b.b));
-        return dx * dx + dy * dy < (r + CLEAR) * (r + CLEAR);
-      });
-      const dist = Math.hypot(x - wx, y - wy);
-      if (!hit && dist < bestDist) { bestDist = dist; best = [x, y]; }
-    }
-    circleAt = best && { x: best[0] - r, y: best[1] - r, r };
-    move();
-  };
-  // Both are hidden once well behind the photo, so they can't come out below it into the white gap.
-  const move = () => {
-    const s = scrollY;
-    const dy = dotAt.y + s * (1 - DOT_SPEED);
-    dot.style.visibility = dy < photoTop + 40 ? "visible" : "hidden";
-    dot.style.transform = `translate3d(${dotAt.x}px,${dy}px,0)`;
-    if (!circleAt) { circle.style.visibility = "hidden"; return; }
-    const cy = circleAt.y + s * (1 - CIRCLE_SPEED);
-    circle.style.visibility = cy + circleAt.r * 2 < photoBottom ? "visible" : "hidden";
-    circle.style.transform = `translate3d(${circleAt.x}px,${cy}px,0)`;
-  };
+  const h1 = document.querySelector(".skin-airy .hero-split h1");
+  if (!h1) return;
+  const dot = document.createElement("span");
+  dot.className = "hero-period"; dot.setAttribute("aria-hidden", "true");
+  (h1.querySelector("em:last-child") || h1).append(dot);
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const bar = document.querySelector(".topbar");
   let ticking = false;
-  addEventListener("scroll", () => {
-    if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; move(); }); }
-  }, { passive: true });
-  decor.classList.add("is-live");
-  layout();
-  new ResizeObserver(layout).observe(hero);
-  // fonts.ready can resolve before the font has started loading, and a late font moves the lines without
-  // changing the hero's size. A test on 5 Nov found 13 px where 16 was meant, hence the extra hooks.
-  if (document.fonts) { document.fonts.ready.then(layout); document.fonts.addEventListener("loadingdone", layout); }
-  addEventListener("load", layout);
-  setTimeout(layout, 1500);
+  const shrink = () => {
+    ticking = false;
+    const top = bar ? bar.getBoundingClientRect().bottom : 0, bottom = h1.getBoundingClientRect().bottom;
+    // Measured against the distance at scroll 0, so a resize or a late font can't leave it at the wrong size.
+    const start = bottom + scrollY - top;
+    dot.style.transform = `scale(${Math.min(1, Math.max(0, (bottom - top) / start))})`;
+  };
+  const queue = () => { if (!ticking) { ticking = true; requestAnimationFrame(shrink); } };
+  addEventListener("scroll", queue, { passive: true });
+  addEventListener("resize", queue);
+  shrink();
 });
 
 // Depth layers, airy skin (4 Nov 2026, Krystof: "do the bubbles in parallax, as another layer, even two layers
