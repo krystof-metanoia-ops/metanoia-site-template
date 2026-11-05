@@ -692,19 +692,24 @@ html:has(body[data-signature]){overflow-x:clip}
 @media (max-width:900px){.skin-airy .textsec__grid{gap:1.75rem}}
 
 
-/* Quiet (4 Nov 2026), opt-in: theme.skin gains "quiet". Rebuilt from the description in the log of Maria's
-   ChatGPT ("Quiet section rules", her choice on 4 Nov): no large or floating circles, fine section and item
-   rules with small stationary pink markers, smaller headings and spacing, photographs in colour. Her own CSS
-   sits on her Mac, so this is a reconstruction, not her file: compare before adopting it. */
-.skin-quiet .hero-split>.decor,.skin-quiet .bubbles{display:none}
-.skin-quiet .hero-split__media img,.skin-quiet .gp__photo{filter:none}
-.skin-quiet .sec{padding:clamp(3.5rem,7vw,5.5rem) 0}
-.skin-quiet .sec>.wrap{border-top:1px solid color-mix(in srgb,var(--ink) 14%,transparent);padding-top:clamp(2rem,4vw,3rem)}
-.skin-quiet .sec.gp>.wrap{padding-top:clamp(2rem,4vw,3rem)}
-.skin-quiet .sec h2,.skin-quiet .textsec h2,.skin-quiet .sec.tiles h2,.skin-quiet .sec.gp h2{font-size:clamp(2rem,3.6vw,3.2rem);line-height:1.08}
-.skin-quiet .contact-plain h2{font-size:clamp(2rem,3.6vw,3.2rem)}
-.skin-quiet .pcard,.skin-quiet .pgrid .pcard,.skin-quiet .aside-card,.skin-quiet .tiles .tile{background:none!important;border:0!important;border-top:1px solid color-mix(in srgb,var(--ink) 14%,transparent)!important;padding-left:0;padding-right:0;box-shadow:none!important}
-.skin-quiet .pcard:hover,.skin-quiet .tile:hover,.skin-quiet .aside-card:hover{transform:none;box-shadow:none}
-.skin-quiet .pcard h3,.skin-quiet .aside-card h3,.skin-quiet .tiles .tile h3{position:relative;padding-left:.95rem}
-.skin-quiet .pcard h3::before,.skin-quiet .aside-card h3::before,.skin-quiet .tiles .tile h3::before{content:"";position:absolute;left:0;top:.62em;width:7px;height:7px;border-radius:50%;background:var(--accent)}
-.skin-quiet .tiles__grid{gap:0 2.5rem!important}
+/* For LPs, airy skin (5 Nov 2026). Maria on the call: the site must appeal to investors, "finance people and
+   men", and be "safe"; pink stays. Krystof: "credibility and professionality to potential LPs". */
+/* Original colour in the photographs, with their blue backgrounds (Maria: "the original blue instead of the
+   gray"; she also noted blue reads as the colour of finance). Company logos stay grey. */
+.skin-airy .hero-split .hero-split__media img,.skin-airy .gp__photo{filter:none}
+/* Sentence case, as written in site.json. The skin's lowercase headings and nav read as playful, and printed
+   the firm's own name as "why kidron". Krystof's brief, my call: not asked for by name. */
+.skin-airy .sec h2,.skin-airy .textsec h2,.skin-airy .topbar .nav a,.skin-airy .quote__text{text-transform:none}
+.skin-airy .sec.pgrid h2{font-size:clamp(3rem,6vw,5.2rem)}
+/* Taken from Maria's Quiet section rules: small stationary markers beside the section labels, quieter
+   numbers, hairlines around the co-investors. */
+.skin-airy .sec__head>.eyebrow::before,.skin-airy .textsec>.wrap>.eyebrow::before{width:6px;height:6px;flex:0 0 6px}
+.skin-airy .sec__head>.eyebrow,.skin-airy .textsec>.wrap>.eyebrow{gap:.7rem}
+.skin-airy .tiles .tile__num{font-size:1.1rem;font-weight:400}
+.skin-airy .tiles .tile{grid-template-columns:2.75rem minmax(0,1fr)}
+/* The eyebrow types itself in. Reserve its line so the hero doesn't jump, and the fixed dots don't move, when
+   the first letter appears. */
+.skin-airy .hero-split__eyebrow{min-height:1.4em}
+/* Near layer a little lighter: the depth stays, the page reads calmer. Maria liked the depth ("that's a nice
+   effect") and objected to the floating dots only. */
+.bubbles__layer--near span{background:color-mix(in srgb,var(--accent) 22%,transparent)}

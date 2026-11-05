@@ -150,23 +150,24 @@ document.addEventListener("DOMContentLoaded", () => {
   requestAnimationFrame(frame);
 });
 
-// Hero dots, airy skin (3 Nov 2026, Maria's v9 feedback: "keep the circles clear of headlines, text and
-// buttons at every screen width"). The old CSS keyframes moved each dot by fixed pixels, so at some widths
-// a dot had to cross the text, and no keyframe can know where the text wraps. So the path is computed here:
-// each dot drifts on a slow curve (lava-lamp, not bouncing: Krystof, 30 Oct) and a step that would bring it
-// within CLEAR px of a text line or button is never taken; it turns instead. Clearance holds by construction.
+// Hero dots, airy skin. Fixed in place since 5 Nov 2026. Maria on the call: floating dots "might convey a
+// message that it's too playful" for LPs, who are mostly "finance people and men"; "no floating dots, just
+// simple". Krystof: "fixed dots in the header section". (Before that they drifted: 30 Oct to 4 Nov.)
+// They still have to stay clear of the text at every width (Maria, 3 Nov), and no CSS position can know
+// where the text wraps, so the script measures the text and puts each dot on the free spot nearest its place
+// in the composition. A dot with no free spot at that width stays hidden rather than touch the text.
 // Without JavaScript the dots stay hidden (see CSS), so a page without this code can't show an overlap.
-// Static under reduced motion. Hero only; the loop stops while the hero is off screen.
 document.addEventListener("DOMContentLoaded", () => {
   const decor = document.querySelector(".skin-airy .hero-split > .decor");
   if (!decor) return;
   const hero = decor.parentElement;
   const textBox = hero.querySelector(".hero-split__text");
   const photo = hero.querySelector(".hero-split__media img");
-  const moving = document.body.hasAttribute("data-motion") && !matchMedia("(prefers-reduced-motion: reduce)").matches;
   const CLEAR = 16;   // px between a dot's edge and any text or button
-  const SPEED = 13;   // px per second: the speed of the old keyframes (about 130 px in 8.5 s, 30 Oct)
-  const LOOK = 44;    // px ahead at which a dot starts to curve away, so it rarely has to stop and turn
+  // Where each span wants to be, as a share of the free area above the photo. They form one group on the
+  // right, around the large pale circle, like the lens in the Kidron logo. Order follows the CSS sizes:
+  // medium solid, small solid, large pale, small-medium solid.
+  const WANT = [[0.885, 0.3], [0.945, 0.74], [0.8, 0.5], [0.7, 0.8]];
   let obstacles = [], W = 0, H = 0;
 
   // Line-tight boxes for the headline and paragraphs, so the free space after a short last line counts.
@@ -182,80 +183,37 @@ document.addEventListener("DOMContentLoaded", () => {
       [...range.getClientRects()].forEach((r) => { if (r.width && r.height) list.push(box(r)); });
     });
     obstacles = list; W = o.width;
-    // Dots may slide halfway behind the top of the photo (it sits above them), never lower: a dot fully
-    // behind the photo would just be missing from the page.
     H = photo ? photo.getBoundingClientRect().top - o.top : o.height;
   };
   const hits = (x, y, r) => obstacles.some((b) => {
     const dx = x - Math.max(b.l, Math.min(x, b.r)), dy = y - Math.max(b.t, Math.min(y, b.b));
     return dx * dx + dy * dy < (r + CLEAR) * (r + CLEAR);
   });
-  // Krystof, 4 Nov: "I don't like circles that are cut off". So on a desktop the whole dot stays on the page,
-  // and only a phone may let a dot hang half off the side. The pale dot never slides behind the photo: a pale
-  // circle with a flat edge reads as a bug, while a dark one reads as depth (his two screenshots).
-  const out = (x, y, r) => {
-    const side = W > 820 ? r : r * 0.5;
-    const floor = r > 40 ? H - r : H;
-    return x < side || x > W - side || y < r || y > floor;
-  };
-  const free = (x, y, r) => !out(x, y, r) && !hits(x, y, r);
-
-  const dots = [...decor.children].map((el, i) => ({ el, i, x: 0, y: 0, r: 0, a: i * 2.1 + 0.6, ok: false }));
-  // Find a free spot away from the dots already placed, so they start spread out.
-  const place = (d, placed) => {
-    let best = null, bestScore = -1;
-    for (let y = d.r; y <= H; y += 12) for (let x = 0; x <= W; x += 12) {
-      if (!free(x, y, d.r)) continue;
-      const apart = placed.length ? Math.min(300, ...placed.map((p) => Math.hypot(p.x - x, p.y - y))) : x / 10;
-      const score = apart;
-      if (score > bestScore) { bestScore = score; best = [x, y]; }
-    }
-    // No free spot at this width: the dot stays hidden rather than touch the text.
-    d.ok = Boolean(best);
-    if (best) [d.x, d.y] = best;
-    d.el.style.visibility = d.ok ? "visible" : "hidden";
-  };
-  const draw = (d) => { d.el.style.transform = `translate3d(${d.x - d.r}px,${d.y - d.r}px,0)`; };
-  const layout = (first) => {
+  // Krystof, 4 Nov: "I don't like circles that are cut off". The whole dot stays on the page at every width,
+  // and nothing slides behind the photo, because a dot with a flat edge reads as a bug. On a narrow phone that
+  // leaves room for fewer dots, which is the better trade.
+  const out = (x, y, r) => x < r + 8 || x > W - r - 8 || y < r + 8 || y > H - r - 8;
+  const dots = [...decor.children].map((el, i) => ({ el, want: WANT[i] || [0.8, 0.5] }));
+  const layout = () => {
     measure();
-    const placed = [];
     dots.forEach((d) => {
-      d.r = d.el.offsetWidth / 2;
-      // On a resize a dot keeps its place unless the new text wrap reached it.
-      if (first || !d.ok || !free(d.x, d.y, d.r)) place(d, placed);
-      if (d.ok) { placed.push(d); draw(d); }
+      const r = d.el.offsetWidth / 2, wx = d.want[0] * W, wy = d.want[1] * H;
+      let best = null, bestDist = Infinity;
+      for (let y = 0; y <= H; y += 8) for (let x = 0; x <= W; x += 8) {
+        if (out(x, y, r) || hits(x, y, r)) continue;
+        const dist = Math.hypot(x - wx, y - wy);
+        if (dist < bestDist) { bestDist = dist; best = [x, y]; }
+      }
+      d.el.style.visibility = best ? "visible" : "hidden";
+      if (best) d.el.style.transform = `translate3d(${best[0] - r}px,${best[1] - r}px,0)`;
     });
   };
-
   decor.classList.add("is-live");
-  layout(true);
-  new ResizeObserver(() => layout(false)).observe(hero);
+  layout();
+  new ResizeObserver(layout).observe(hero);
   // Web fonts change where the text wraps.
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => layout(false));
-  if (!moving) return;
-
-  let last = 0, on = false, measured = 0;
-  const step = (now) => {
-    if (!on) return;
-    const dt = Math.min((now - last) / 1000, 0.1); last = now;
-    // Measure again once a second. The test on 3 Nov found a dot 6 px from the eyebrow: the text had moved
-    // (the eyebrow types itself in, a late web font rewraps) without a fresh measurement. The two hooks above
-    // aren't enough on their own. A few rectangles a second cost nothing against that.
-    if (now - measured > 1000) { measured = now; layout(false); }
-    dots.forEach((d) => {
-      if (!d.ok) return;
-      d.a += Math.sin(now / 5200 + d.i * 1.7) * 0.25 * dt; // the slow wander
-      const cos = Math.cos(d.a), sin = Math.sin(d.a);
-      if (!free(d.x + cos * LOOK, d.y + sin * LOOK, d.r)) d.a += 0.7 * dt;
-      const nx = d.x + cos * SPEED * dt, ny = d.y + sin * SPEED * dt;
-      if (free(nx, ny, d.r)) { d.x = nx; d.y = ny; draw(d); } else d.a += 1.2 * dt;
-    });
-    requestAnimationFrame(step);
-  };
-  new IntersectionObserver(([e]) => {
-    if (e.isIntersecting && !on) { on = true; last = performance.now(); requestAnimationFrame(step); }
-    else if (!e.isIntersecting) on = false;
-  }).observe(hero);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+  addEventListener("load", layout);
 });
 
 // Depth layers, airy skin (4 Nov 2026, Krystof: "do the bubbles in parallax, as another layer, even two layers
