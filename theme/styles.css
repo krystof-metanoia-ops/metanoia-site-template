@@ -704,6 +704,7 @@ html:has(body[data-signature]){overflow-x:clip}
 .bubbles__layer--near span{background:color-mix(in srgb,var(--accent) 22%,transparent)}
 
 /* Headline dot (scripts.js). The template's hero circles are off in this skin: 5 Nov, Krystof and Maria. The size
-   and gap are those of a full stop in this typeface. */
+   and gap are those of a full stop in this typeface. It shrinks towards its bottom edge, on the text baseline
+   (Krystof, 5 Nov), so it stays a full stop all the way down. */
 .skin-airy .hero-split>.decor{display:none}
-.hero-period{display:inline-block;width:.17em;height:.17em;margin-left:.06em;border-radius:50%;background:var(--accent);transform-origin:50% 50%;will-change:transform}
+.hero-period{display:inline-block;width:.17em;height:.17em;margin-left:.06em;border-radius:50%;background:var(--accent);transform-origin:50% 100%;will-change:transform}
